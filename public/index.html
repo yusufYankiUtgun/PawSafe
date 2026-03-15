@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>PawSafe — Harita</title>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+  <link rel="stylesheet" href="/css/style.css"/>
+</head>
+<body>
+
+<!-- NAVBAR -->
+<nav class="navbar">
+  <a href="/" class="navbar-brand">
+    <span class="paw-icon">🐾</span> PawSafe
+  </a>
+  <div class="navbar-links">
+    <a href="/" class="nav-link active">🗺️ Harita</a>
+    <a href="/leaderboard" class="nav-link">🏆 Sıralama</a>
+    <span id="nav-user" style="display:none"></span>
+    <span id="notif-container" style="display:none">
+      <button id="notif-btn" title="Bildirimler">🔔</button>
+      <span id="notif-badge" style="display:none"></span>
+      <div id="notif-dropdown">
+        <div class="notif-header">Bildirimler</div>
+        <div id="notif-list"></div>
+      </div>
+    </span>
+    <a id="nav-login" href="/login" class="nav-btn primary">Giriş Yap</a>
+    <button id="nav-logout" class="nav-btn" style="display:none">Çıkış</button>
+  </div>
+</nav>
+
+<!-- MAP -->
+<div id="map"></div>
+
+<!-- MAP HINT -->
+<div class="map-hint" id="map-hint">📍 Marker eklemek için haritaya tıklayın (giriş gerekli)</div>
+
+<!-- ADD MARKER MODAL -->
+<div class="modal-overlay" id="add-marker-modal">
+  <div class="modal">
+    <div class="modal-header">
+      <h2>🐾 Yeni Marker Ekle</h2>
+      <button class="modal-close" id="modal-close">&times;</button>
+    </div>
+    <div class="modal-body">
+      <div class="coord-preview" id="coord-preview">Konum seçilmedi</div>
+      <form id="add-marker-form">
+        <div class="form-group">
+          <label>Açıklama</label>
+          <textarea id="marker-desc" placeholder="Hayvan hakkında bilgi verin..." required></textarea>
+        </div>
+        <div class="form-group">
+          <label>Hayvan Sayısı</label>
+          <input type="number" id="marker-count" min="1" max="50" value="1"/>
+        </div>
+        <button type="submit" class="btn-primary">Marker Ekle</button>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<script src="/js/mapPage.js"></script>
+
+<script>
+  // Show notif container and hint based on login state
+  document.addEventListener('DOMContentLoaded', () => {
+    const token = localStorage.getItem('token');
+    if (token) {
+      document.getElementById('notif-container').style.display = 'inline-block';
+      document.getElementById('map-hint').textContent = '📍 Marker eklemek için haritaya tıklayın';
+    }
+  });
+</script>
+</body>
+</html>

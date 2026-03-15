@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>PawSafe — Admin Panel</title>
+  <link rel="stylesheet" href="/css/style.css"/>
+</head>
+<body>
+
+<!-- NAVBAR -->
+<nav class="navbar">
+  <a href="/" class="navbar-brand">
+    <span class="paw-icon">🐾</span> PawSafe
+  </a>
+  <div class="navbar-links">
+    <a href="/" class="nav-link">🗺️ Harita</a>
+    <a href="/leaderboard" class="nav-link">🏆 Sıralama</a>
+    <a href="/admin" class="nav-link active">⚙️ Admin</a>
+    <span id="nav-user" style="color:rgba(255,255,255,0.9);font-size:0.9rem;padding:6px 12px;"></span>
+    <button id="nav-logout" class="nav-btn">Çıkış</button>
+  </div>
+</nav>
+
+<div class="admin-wrapper">
+  <div class="page-header" style="text-align:left;margin-bottom:24px;">
+    <h1 style="font-size:1.6rem;color:var(--primary);">⚙️ Admin Paneli</h1>
+    <p style="color:var(--text-secondary);margin-top:4px;">Sistem yönetimi ve istatistikler</p>
+  </div>
+
+  <!-- Stats -->
+  <div class="stats-grid">
+    <div class="stat-card">
+      <div class="stat-value" id="stat-markers">—</div>
+      <div class="stat-label">📍 Toplam Marker</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-value" id="stat-users">—</div>
+      <div class="stat-label">👤 Toplam Kullanıcı</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-value" id="stat-validations">—</div>
+      <div class="stat-label">✅ Doğrulama</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-value" id="stat-disputes">—</div>
+      <div class="stat-label">⚠️ İtiraz</div>
+    </div>
+  </div>
+
+  <!-- Tabs -->
+  <div class="admin-table-card">
+    <div class="tabs">
+      <button class="tab-btn active" data-tab="markers">📍 Markerlar</button>
+      <button class="tab-btn" data-tab="users">👥 Kullanıcılar</button>
+    </div>
+
+    <!-- Markers Panel -->
+    <div class="tab-panel active" id="panel-markers">
+      <div class="table-responsive">
+        <table>
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Açıklama</th>
+              <th>Raporlayan</th>
+              <th>Konum</th>
+              <th>Oylar</th>
+              <th>Tarih</th>
+              <th>İşlem</th>
+            </tr>
+          </thead>
+          <tbody id="markers-tbody">
+            <tr><td colspan="7" style="text-align:center;padding:30px;color:#999">Yükleniyor...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Users Panel -->
+    <div class="tab-panel" id="panel-users">
+      <div class="table-responsive">
+        <table>
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Kullanıcı Adı</th>
+              <th>E-posta</th>
+              <th>Trust Skoru</th>
+              <th>Rol</th>
+            </tr>
+          </thead>
+          <tbody id="users-tbody">
+            <tr><td colspan="5" style="text-align:center;padding:30px;color:#999">Yüklemek için sekmeye tıklayın</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="/js/adminPage.js"></script>
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+    const username = localStorage.getItem('username');
+    if (username) document.getElementById('nav-user').textContent = `👤 ${username}`;
+  });
+</script>
+</body>
+</html>

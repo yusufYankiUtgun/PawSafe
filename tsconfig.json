@@ -1,0 +1,22 @@
+{
+  "compilerOptions": {
+    "target": "ES2020",
+    "module": "CommonJS",
+    "lib": ["ES2020"],
+    "outDir": "./dist",
+    "rootDir": "./src",
+    "strict": false,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
+    "resolveJsonModule": true
+  },
+  "include": [
+    "src/server.ts",
+    "src/api/**/*",
+    "src/business/**/*",
+    "src/data/**/*",
+    "src/interfaces/**/*"
+  ],
+  "exclude": ["node_modules", "public", "dist"]
+}

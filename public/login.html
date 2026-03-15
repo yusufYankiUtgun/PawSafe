@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>PawSafe — Giriş</title>
+  <link rel="stylesheet" href="/css/style.css"/>
+</head>
+<body class="auth-page">
+
+<div class="auth-card">
+  <!-- Brand -->
+  <div class="auth-brand">
+    <div class="logo">🐾</div>
+    <h1>PawSafe</h1>
+    <p>Sokak hayvanları için topluluk platformu</p>
+  </div>
+
+  <!-- Tabs -->
+  <div class="auth-tabs">
+    <button class="auth-tab active" data-tab="login">Giriş Yap</button>
+    <button class="auth-tab" data-tab="register">Kayıt Ol</button>
+  </div>
+
+  <!-- Login Panel -->
+  <div class="auth-panel" id="panel-login" style="display:block">
+    <div class="error-msg" id="login-error"></div>
+    <form id="login-form">
+      <div class="form-group">
+        <label>E-posta</label>
+        <input type="email" id="login-email" placeholder="ornek@mail.com" required/>
+      </div>
+      <div class="form-group">
+        <label>Şifre</label>
+        <input type="password" id="login-password" placeholder="Şifreniz" required/>
+      </div>
+      <button type="submit" class="btn-primary">Giriş Yap</button>
+    </form>
+    <div style="margin-top:16px;padding:12px;background:#E3F2FD;border-radius:8px;font-size:0.82rem;color:#1565C0;">
+      <strong>Demo hesaplar:</strong><br/>
+      mehmet@example.com / 1234<br/>
+      admin@pawsafe.com / admin123
+    </div>
+  </div>
+
+  <!-- Register Panel -->
+  <div class="auth-panel" id="panel-register">
+    <div class="error-msg" id="reg-error"></div>
+    <form id="register-form">
+      <div class="form-group">
+        <label>Kullanıcı Adı</label>
+        <input type="text" id="reg-username" placeholder="kullanici_adi" required/>
+      </div>
+      <div class="form-group">
+        <label>E-posta</label>
+        <input type="email" id="reg-email" placeholder="ornek@mail.com" required/>
+      </div>
+      <div class="form-group">
+        <label>Şifre</label>
+        <input type="password" id="reg-password" placeholder="En az 4 karakter" required/>
+      </div>
+      <button type="submit" class="btn-primary">Kayıt Ol</button>
+    </form>
+  </div>
+
+  <div class="auth-footer">
+    © 2024 PawSafe — Sokak hayvanlarını birlikte koruyalım 🐾
+  </div>
+</div>
+
+<script src="/js/authPage.js"></script>
+</body>
+</html>
