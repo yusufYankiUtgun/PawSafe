@@ -9,6 +9,42 @@
 </head>
 <body>
 
+<!-- ONBOARDING OVERLAY -->
+<div id="intro-overlay">
+  <div class="intro-card">
+    <div class="intro-logo">🐾</div>
+    <h1 class="intro-title">PawSafe'e Hoş Geldiniz</h1>
+    <p class="intro-subtitle">Sokak hayvanlarını birlikte takip edelim ve koruyalım</p>
+
+    <div class="intro-features">
+      <div class="intro-feature">
+        <div class="intro-feature-icon">🗺️</div>
+        <div>
+          <strong>Haritada Görüntüle</strong>
+          <p>İstanbul genelindeki sokak köpeklerini gerçek zamanlı olarak haritada takip edin.</p>
+        </div>
+      </div>
+      <div class="intro-feature">
+        <div class="intro-feature-icon">📍</div>
+        <div>
+          <strong>İhbar Ekle</strong>
+          <p>Haritaya tıklayarak yeni bir sokak köpeği ihbarı oluşturun. Boyut, renk ve davranış bilgilerini seçin.</p>
+        </div>
+      </div>
+      <div class="intro-feature">
+        <div class="intro-feature-icon">✅</div>
+        <div>
+          <strong>Doğrula &amp; Puan Kazan</strong>
+          <p>Diğer ihbarları doğrulayarak güven puanı kazanın ve sıralamada yükselın.</p>
+        </div>
+      </div>
+    </div>
+
+    <button class="intro-btn" id="intro-continue">Haritaya Git →</button>
+    <p class="intro-note">Giriş yapmadan haritayı görüntüleyebilirsiniz. İhbar eklemek için giriş gereklidir.</p>
+  </div>
+</div>
+
 <!-- NAVBAR -->
 <nav class="navbar">
   <a href="/" class="navbar-brand">
@@ -41,21 +77,144 @@
 <div class="modal-overlay" id="add-marker-modal">
   <div class="modal">
     <div class="modal-header">
-      <h2>🐾 Yeni Marker Ekle</h2>
+      <h2>🐾 Yeni İhbar Ekle</h2>
       <button class="modal-close" id="modal-close">&times;</button>
     </div>
     <div class="modal-body">
       <div class="coord-preview" id="coord-preview">Konum seçilmedi</div>
       <form id="add-marker-form">
         <div class="form-group">
-          <label>Açıklama</label>
-          <textarea id="marker-desc" placeholder="Hayvan hakkında bilgi verin..." required></textarea>
+          <label>Boyut <span class="req">*</span></label>
+          <select id="marker-size" required>
+            <option value="">— Seçin —</option>
+            <option value="small">Küçük</option>
+            <option value="medium">Orta</option>
+            <option value="large">Büyük</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Tüy Rengi <span class="req">*</span></label>
+          <select id="marker-color" required>
+            <option value="">— Seçin —</option>
+            <option value="beyaz">Beyaz</option>
+            <option value="sarı">Sarı</option>
+            <option value="kahverengi">Kahverengi</option>
+            <option value="siyah">Siyah</option>
+            <option value="gri">Gri</option>
+            <option value="benekli">Benekli</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Küpe Rengi <span class="req">*</span></label>
+          <select id="marker-ear-tag" required>
+            <option value="">— Seçin —</option>
+            <option value="yok">Küpe Yok</option>
+            <option value="sarı">Sarı</option>
+            <option value="mavi">Mavi</option>
+            <option value="kırmızı">Kırmızı</option>
+            <option value="yeşil">Yeşil</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Davranış <span class="req">*</span></label>
+          <div class="radio-group">
+            <label class="radio-option">
+              <input type="radio" name="classification" value="friendly"/> Zararsız
+            </label>
+            <label class="radio-option">
+              <input type="radio" name="classification" value="aggressive"/> Zararlı
+            </label>
+          </div>
         </div>
         <div class="form-group">
           <label>Hayvan Sayısı</label>
           <input type="number" id="marker-count" min="1" max="50" value="1"/>
         </div>
-        <button type="submit" class="btn-primary">Marker Ekle</button>
+        <div class="form-group">
+          <label>Açıklama</label>
+          <textarea id="marker-desc" placeholder="Eklemek istediğiniz bilgiler..."></textarea>
+        </div>
+        <button type="submit" class="btn-primary">Devam Et →</button>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- CONFIRM MODAL -->
+<div class="modal-overlay" id="confirm-modal">
+  <div class="modal modal-sm">
+    <div class="modal-header">
+      <h2>Onay</h2>
+    </div>
+    <div class="modal-body" style="text-align:center">
+      <p style="font-size:1rem;margin-bottom:20px">Bu ihbarı kaydetmek istediğinizden emin misiniz?</p>
+      <div style="display:flex;gap:12px">
+        <button class="btn-secondary" id="confirm-no" style="flex:1">İptal</button>
+        <button class="btn-primary" id="confirm-yes" style="flex:1">Evet, Kaydet</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- EDIT MARKER MODAL -->
+<div class="modal-overlay" id="edit-marker-modal">
+  <div class="modal">
+    <div class="modal-header">
+      <h2>✏️ İhbarı Düzenle</h2>
+      <button class="modal-close" id="edit-modal-close">&times;</button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="edit-marker-id"/>
+      <form id="edit-marker-form">
+        <div class="form-group">
+          <label>Boyut</label>
+          <select id="edit-marker-size">
+            <option value="small">Küçük</option>
+            <option value="medium">Orta</option>
+            <option value="large">Büyük</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Tüy Rengi</label>
+          <select id="edit-marker-color">
+            <option value="beyaz">Beyaz</option>
+            <option value="sarı">Sarı</option>
+            <option value="kahverengi">Kahverengi</option>
+            <option value="siyah">Siyah</option>
+            <option value="gri">Gri</option>
+            <option value="benekli">Benekli</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Küpe Rengi</label>
+          <select id="edit-marker-ear-tag">
+            <option value="yok">Küpe Yok</option>
+            <option value="sarı">Sarı</option>
+            <option value="mavi">Mavi</option>
+            <option value="kırmızı">Kırmızı</option>
+            <option value="yeşil">Yeşil</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Davranış</label>
+          <div class="radio-group">
+            <label class="radio-option">
+              <input type="radio" name="edit-classification" value="friendly"/> Zararsız
+            </label>
+            <label class="radio-option">
+              <input type="radio" name="edit-classification" value="aggressive"/> Zararlı
+            </label>
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Hayvan Sayısı</label>
+          <input type="number" id="edit-marker-count" min="1" max="50" value="1"/>
+        </div>
+        <div class="form-group">
+          <label>Açıklama</label>
+          <textarea id="edit-marker-desc"></textarea>
+        </div>
+        <button type="submit" class="btn-primary">Güncelle</button>
       </form>
     </div>
   </div>
@@ -67,8 +226,18 @@
 <script src="/js/mapPage.js"></script>
 
 <script>
-  // Show notif container and hint based on login state
   document.addEventListener('DOMContentLoaded', () => {
+    // Onboarding overlay
+    const overlay = document.getElementById('intro-overlay');
+    if (!localStorage.getItem('pawsafe_intro_seen')) {
+      overlay.style.display = 'flex';
+    }
+    document.getElementById('intro-continue').addEventListener('click', () => {
+      localStorage.setItem('pawsafe_intro_seen', '1');
+      overlay.style.display = 'none';
+    });
+
+    // Show notif container and hint based on login state
     const token = localStorage.getItem('token');
     if (token) {
       document.getElementById('notif-container').style.display = 'inline-block';

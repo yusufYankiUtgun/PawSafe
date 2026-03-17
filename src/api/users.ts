@@ -1,10 +1,12 @@
 import { Router, Request, Response } from 'express';
 import { AuthService } from '../business/AuthService';
 import { NotificationObserver } from '../business/NotificationObserver';
+import { MarkerService } from '../business/MarkerService';
 
 export function createUsersRouter(
   authService: AuthService,
-  notificationObserver: NotificationObserver
+  notificationObserver: NotificationObserver,
+  markerService?: MarkerService,
 ): Router {
   const router = Router();
 
@@ -48,6 +50,16 @@ export function createUsersRouter(
   router.post('/notifications/:id/read', (req: Request, res: Response) => {
     notificationObserver.markRead(req.params.id);
     res.json({ success: true });
+  });
+
+  // Profile: current user's markers
+  router.get('/my-markers', (req: Request, res: Response) => {
+    const token = req.headers.authorization?.replace('Bearer ', '');
+    if (!token) return res.status(401).json({ error: 'Yetkilendirme gerekli.' });
+    const user = authService.getUserFromToken(token);
+    if (!user) return res.status(401).json({ error: 'Geçersiz token.' });
+    const all = markerService?.getAll() ?? [];
+    res.json(all.filter(m => m.reporterId === user.id));
   });
 
   return router;

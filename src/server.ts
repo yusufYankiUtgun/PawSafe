@@ -30,7 +30,7 @@ const validationRepo = new ValidationRepository();
 const imageRepo = new ImageRepository();
 
 const authService = new AuthService(userRepo);
-const markerService = new MarkerService(markerRepo);
+const markerService = new MarkerService(markerRepo, userRepo);
 const imageUploadService = new ImageUploadService(imageRepo);
 const validationService = new ValidationService(validationRepo, markerRepo);
 
@@ -51,12 +51,13 @@ app.use(express.static(path.join(__dirname, '../public')));
 
 // API routes
 app.use('/api/markers', createMarkersRouter(markerService, authService));
-app.use('/api/users', createUsersRouter(authService, notificationObserver));
+app.use('/api/users', createUsersRouter(authService, notificationObserver, markerService));
 app.use('/api/validations', createValidationsRouter(validationService, authService, leaderboardObserver));
 app.use('/api/admin', createAdminRouter(authService, markerService, userRepo));
 
 // Serve HTML pages
 app.get('/leaderboard', (_req, res) => res.sendFile(path.join(__dirname, '../public/leaderboard.html')));
+app.get('/profile', (_req, res) => res.sendFile(path.join(__dirname, '../public/profile.html')));
 app.get('/admin', (_req, res) => res.sendFile(path.join(__dirname, '../public/admin.html')));
 app.get('/login', (_req, res) => res.sendFile(path.join(__dirname, '../public/login.html')));
 app.get('*', (_req, res) => res.sendFile(path.join(__dirname, '../public/index.html')));

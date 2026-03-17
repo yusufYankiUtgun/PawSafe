@@ -177,39 +177,73 @@ body {
 }
 .paw-popup .leaflet-popup-content { margin: 0; width: 280px !important; }
 
-.marker-popup img {
-  width: 100%;
-  height: 160px;
-  object-fit: cover;
+.marker-popup { overflow: hidden; }
+
+.popup-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 14px;
+  color: #fff;
+  font-size: 0.85rem;
+  font-weight: 600;
 }
 
-.marker-popup h3 {
-  padding: 10px 14px 4px;
-  font-size: 1rem;
+.popup-classification { font-size: 0.9rem; font-weight: 700; }
+.popup-animal-count { font-size: 0.8rem; opacity: 0.9; }
+
+.popup-body { padding: 10px 14px; }
+
+.popup-badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+  margin-bottom: 8px;
+}
+
+.popup-badge {
+  background: #E3F2FD;
   color: var(--primary-dark);
+  border-radius: 10px;
+  padding: 2px 9px;
+  font-size: 0.76rem;
+  font-weight: 600;
+}
+
+.popup-desc {
+  font-size: 0.88rem;
+  color: var(--text);
+  line-height: 1.4;
+  margin-bottom: 6px;
+}
+
+.popup-address {
+  font-size: 0.8rem;
+  color: var(--primary);
+  margin-bottom: 5px;
 }
 
 .popup-meta {
   display: flex;
   justify-content: space-between;
-  padding: 2px 14px;
-  font-size: 0.8rem;
+  font-size: 0.78rem;
   color: var(--text-secondary);
+  margin-bottom: 3px;
 }
 
 .popup-actions {
   display: flex;
   gap: 8px;
-  padding: 10px 14px 14px;
+  padding: 8px 14px 12px;
 }
 
-.btn-validate, .btn-dispute {
+.btn-validate, .btn-dispute, .btn-edit, .btn-delete-marker {
   flex: 1;
-  padding: 8px;
+  padding: 7px;
   border: none;
   border-radius: 8px;
   cursor: pointer;
-  font-size: 0.85rem;
+  font-size: 0.82rem;
   font-weight: 600;
   transition: all 0.2s;
 }
@@ -218,6 +252,43 @@ body {
 .btn-validate:hover { background: #C8E6C9; }
 .btn-dispute { background: #FFF3E0; color: var(--accent); }
 .btn-dispute:hover { background: #FFE0B2; }
+.btn-edit { background: #E3F2FD; color: var(--primary); }
+.btn-edit:hover { background: #BBDEFB; }
+.btn-delete-marker { background: #FFEBEE; color: var(--error); }
+.btn-delete-marker:hover { background: #FFCDD2; }
+
+/* ===== FORM EXTRAS ===== */
+.req { color: var(--error); }
+
+.radio-group {
+  display: flex;
+  gap: 16px;
+}
+
+.radio-option {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+  font-size: 0.9rem;
+  font-weight: 500;
+}
+
+.modal-sm { max-width: 320px; }
+
+.btn-secondary {
+  width: 100%;
+  padding: 11px;
+  background: #f5f5f5;
+  color: var(--text);
+  border: 1.5px solid var(--border);
+  border-radius: 8px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+.btn-secondary:hover { background: #e0e0e0; }
 
 /* ===== MODALS ===== */
 .modal-overlay {
@@ -604,6 +675,70 @@ tbody tr:hover { background: #F5F7FA; }
   pointer-events: none;
   backdrop-filter: blur(4px);
 }
+
+/* ===== INTRO OVERLAY ===== */
+#intro-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: linear-gradient(135deg, var(--primary-dark) 0%, var(--primary-light) 100%);
+  z-index: 9999;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+
+.intro-card {
+  background: var(--surface);
+  border-radius: 20px;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.35);
+  padding: 40px 36px;
+  max-width: 520px;
+  width: 100%;
+  text-align: center;
+}
+
+.intro-logo { font-size: 3.5rem; line-height: 1; margin-bottom: 12px; }
+.intro-title { font-size: 1.8rem; font-weight: 700; color: var(--primary-dark); margin-bottom: 8px; }
+.intro-subtitle { color: var(--text-secondary); font-size: 1rem; margin-bottom: 28px; }
+
+.intro-features {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  text-align: left;
+  margin-bottom: 28px;
+}
+
+.intro-feature {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  padding: 14px 16px;
+  background: var(--bg);
+  border-radius: 12px;
+}
+
+.intro-feature-icon { font-size: 1.6rem; flex-shrink: 0; margin-top: 2px; }
+.intro-feature strong { display: block; font-size: 0.95rem; color: var(--text); margin-bottom: 3px; }
+.intro-feature p { font-size: 0.82rem; color: var(--text-secondary); line-height: 1.4; margin: 0; }
+
+.intro-btn {
+  width: 100%;
+  padding: 14px;
+  background: var(--primary);
+  color: #fff;
+  border: none;
+  border-radius: 10px;
+  font-size: 1.05rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.2s;
+  margin-bottom: 12px;
+}
+.intro-btn:hover { background: var(--primary-dark); }
+
+.intro-note { font-size: 0.78rem; color: var(--text-secondary); }
 
 /* ===== SCROLLBAR ===== */
 ::-webkit-scrollbar { width: 6px; }

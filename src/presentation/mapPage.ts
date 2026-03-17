@@ -12,7 +12,6 @@ async function init() {
   const token = localStorage.getItem('token');
   const username = localStorage.getItem('username');
 
-  // Update navbar
   const loginBtn = document.getElementById('nav-login');
   const userInfo = document.getElementById('nav-user');
   const logoutBtn = document.getElementById('nav-logout');
@@ -28,7 +27,6 @@ async function init() {
     window.location.reload();
   });
 
-  // Init map
   const mapView = new MapView();
   window.mapView = mapView;
   await mapView.loadMarkers();
@@ -46,15 +44,45 @@ async function init() {
     });
   }
 
-  // Add marker form
-  document.getElementById('add-marker-form')?.addEventListener('submit', async (e) => {
+  // Add marker form — confirm step
+  document.getElementById('add-marker-form')?.addEventListener('submit', (e) => {
     e.preventDefault();
-    const desc = (document.getElementById('marker-desc') as HTMLInputElement).value;
+    const size = (document.getElementById('marker-size') as HTMLSelectElement).value;
+    const color = (document.getElementById('marker-color') as HTMLSelectElement).value;
+    const earTagColor = (document.getElementById('marker-ear-tag') as HTMLSelectElement).value;
+    const classification = (document.querySelector('input[name="classification"]:checked') as HTMLInputElement)?.value;
+
+    if (!size || !color || !earTagColor || !classification) {
+      mapView.showToast('Lütfen tüm köpek özelliklerini seçin.', 'error');
+      return;
+    }
+
+    // Show confirm step
+    const confirmModal = document.getElementById('confirm-modal') as HTMLElement;
+    confirmModal.style.display = 'flex';
+  });
+
+  document.getElementById('confirm-yes')?.addEventListener('click', async () => {
+    (document.getElementById('confirm-modal') as HTMLElement).style.display = 'none';
+    const desc = (document.getElementById('marker-desc') as HTMLTextAreaElement).value;
     const count = parseInt((document.getElementById('marker-count') as HTMLInputElement).value) || 1;
     await mapView.addMarker(desc, count);
   });
 
+  document.getElementById('confirm-no')?.addEventListener('click', () => {
+    (document.getElementById('confirm-modal') as HTMLElement).style.display = 'none';
+  });
+
   document.getElementById('modal-close')?.addEventListener('click', () => mapView.closeModal());
+
+  // Edit modal
+  document.getElementById('edit-marker-form')?.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    await mapView.submitEdit();
+  });
+  document.getElementById('edit-modal-close')?.addEventListener('click', () => {
+    (document.getElementById('edit-marker-modal') as HTMLElement).style.display = 'none';
+  });
 
   // Close notif dropdown on outside click
   document.addEventListener('click', (e) => {

@@ -1,9 +1,14 @@
-import { Marker } from '../interfaces/types';
+import { Marker, DogSize, DogColor, EarTagColor, DogClassification } from '../interfaces/types';
 import { MarkerRepository } from '../data/MarkerRepository';
-import { getRandomDogImage } from '../config/imageConfig';
+import { UserRepository } from '../data/UserRepository';
+
+const POINTS_PER_MARKER = 10;
 
 export class MarkerService {
-  constructor(private markerRepo: MarkerRepository) {}
+  constructor(
+    private markerRepo: MarkerRepository,
+    private userRepo?: UserRepository,
+  ) {}
 
   createMarker(
     lat: number,
@@ -12,13 +17,18 @@ export class MarkerService {
     userId: string,
     username: string,
     description: string,
-    animalCount: number
+    animalCount: number,
+    size?: DogSize,
+    color?: DogColor,
+    earTagColor?: EarTagColor,
+    classification?: DogClassification,
+    address?: string,
   ): Marker {
     const marker: Marker = {
       id: `m${Date.now()}`,
       lat,
       lng,
-      imageUrl: imageUrl || getRandomDogImage(),
+      imageUrl: '',
       description,
       reporterId: userId,
       reporterName: username,
@@ -26,8 +36,19 @@ export class MarkerService {
       disputeCount: 0,
       createdAt: new Date().toISOString().split('T')[0],
       animalCount: animalCount || 1,
+      size,
+      color,
+      earTagColor,
+      classification,
+      address,
     };
-    return this.markerRepo.save(marker);
+    const saved = this.markerRepo.save(marker);
+    this.userRepo?.addTrustScore(userId, POINTS_PER_MARKER);
+    return saved;
+  }
+
+  update(id: string, fields: Partial<Marker>): Marker | undefined {
+    return this.markerRepo.update(id, fields);
   }
 
   getAll(): Marker[] {

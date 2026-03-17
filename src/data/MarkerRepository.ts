@@ -17,6 +17,13 @@ export class MarkerRepository {
     return marker;
   }
 
+  update(id: string, fields: Partial<Marker>): Marker | undefined {
+    const marker = this.markers.find(m => m.id === id);
+    if (!marker) return undefined;
+    Object.assign(marker, fields);
+    return marker;
+  }
+
   delete(id: string): boolean {
     const idx = this.markers.findIndex(m => m.id === id);
     if (idx === -1) return false;

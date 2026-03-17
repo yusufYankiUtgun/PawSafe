@@ -30,6 +30,15 @@ export class UserRepository {
     return 0;
   }
 
+  addTrustScore(userId: string, points: number): number {
+    const user = this.users.find(u => u.id === userId);
+    if (user) {
+      user.trustScore += points;
+      return user.trustScore;
+    }
+    return 0;
+  }
+
   getLeaderboard(): Omit<User, 'password' | 'email'>[] {
     return [...this.users]
       .filter(u => u.role !== 'admin')

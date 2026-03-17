@@ -22,21 +22,38 @@ export function createMarkersRouter(markerService: MarkerService, authService: A
     const user = authService.getUserFromToken(token);
     if (!user) return res.status(401).json({ error: 'Geçersiz token.' });
 
-    const { lat, lng, imageUrl, description, animalCount } = req.body;
+    const { lat, lng, description, animalCount, size, color, earTagColor, classification, address } = req.body;
     if (lat === undefined || lng === undefined) {
       return res.status(400).json({ error: 'Konum bilgisi gerekli.' });
     }
+    if (!size || !color || !earTagColor || !classification) {
+      return res.status(400).json({ error: 'Lütfen köpek özelliklerini seçin.' });
+    }
 
     const marker = markerService.createMarker(
-      lat,
-      lng,
-      imageUrl || '',
-      user.id,
-      user.username,
-      description || '',
-      animalCount || 1
+      lat, lng, '', user.id, user.username,
+      description || '', animalCount || 1,
+      size, color, earTagColor, classification, address || ''
     );
     res.status(201).json(marker);
+  });
+
+  router.put('/:id', (req: Request, res: Response) => {
+    const token = req.headers.authorization?.replace('Bearer ', '');
+    if (!token) return res.status(401).json({ error: 'Yetkilendirme gerekli.' });
+
+    const user = authService.getUserFromToken(token);
+    if (!user) return res.status(401).json({ error: 'Geçersiz token.' });
+
+    const marker = markerService.getById(req.params.id);
+    if (!marker) return res.status(404).json({ error: 'Marker bulunamadı.' });
+    if (marker.reporterId !== user.id && user.role !== 'admin') {
+      return res.status(403).json({ error: 'Bu marker size ait değil.' });
+    }
+
+    const { description, animalCount, size, color, earTagColor, classification } = req.body;
+    const updated = markerService.update(req.params.id, { description, animalCount, size, color, earTagColor, classification });
+    res.json(updated);
   });
 
   router.delete('/:id', (req: Request, res: Response) => {
@@ -44,12 +61,15 @@ export function createMarkersRouter(markerService: MarkerService, authService: A
     if (!token) return res.status(401).json({ error: 'Yetkilendirme gerekli.' });
 
     const user = authService.getUserFromToken(token);
-    if (!user || user.role !== 'admin') {
-      return res.status(403).json({ error: 'Yetkiniz yok.' });
+    if (!user) return res.status(401).json({ error: 'Geçersiz token.' });
+
+    const marker = markerService.getById(req.params.id);
+    if (!marker) return res.status(404).json({ error: 'Marker bulunamadı.' });
+    if (marker.reporterId !== user.id && user.role !== 'admin') {
+      return res.status(403).json({ error: 'Bu marker size ait değil.' });
     }
 
-    const deleted = markerService.delete(req.params.id);
-    if (!deleted) return res.status(404).json({ error: 'Marker bulunamadı.' });
+    markerService.delete(req.params.id);
     res.json({ success: true });
   });
 

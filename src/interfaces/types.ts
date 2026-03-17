@@ -1,3 +1,8 @@
+export type DogSize = 'small' | 'medium' | 'large';
+export type DogColor = 'beyaz' | 'sarı' | 'kahverengi' | 'siyah' | 'gri' | 'benekli';
+export type EarTagColor = 'yok' | 'sarı' | 'mavi' | 'kırmızı' | 'yeşil';
+export type DogClassification = 'friendly' | 'aggressive';
+
 export interface Marker {
   id: string;
   lat: number;
@@ -10,6 +15,12 @@ export interface Marker {
   disputeCount: number;
   createdAt: string;
   animalCount: number;
+  // Template fields
+  size?: DogSize;
+  color?: DogColor;
+  earTagColor?: EarTagColor;
+  classification?: DogClassification;
+  address?: string;
 }
 
 export interface User {
