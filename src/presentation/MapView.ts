@@ -39,7 +39,10 @@ export class MapView {
 
   private async onMapClick(lat: number, lng: number): Promise<void> {
     const token = localStorage.getItem('token');
-    if (!token) return;
+    if (!token) {
+      this.showToast('Marker eklemek için giriş yapmanız gerekiyor.', 'error');
+      return;
+    }
     this.selectedLat = lat;
     this.selectedLng = lng;
 
@@ -129,6 +132,10 @@ export class MapView {
     if (res.ok) {
       await this.loadMarkers();
       this.showToast(data.message, 'success');
+    } else if (res.status === 401) {
+      localStorage.clear();
+      this.showToast('Oturumunuz sona erdi. Lütfen tekrar giriş yapın.', 'error');
+      setTimeout(() => { window.location.href = '/login'; }, 2000);
     } else {
       this.showToast(data.error, 'error');
     }
@@ -171,7 +178,13 @@ export class MapView {
       this.showToast('Marker eklendi! +10 puan kazandınız 🎉', 'success');
     } else {
       const data = await res.json();
-      this.showToast(data.error || 'Hata oluştu.', 'error');
+      if (res.status === 401) {
+        localStorage.clear();
+        this.showToast('Oturumunuz sona erdi. Lütfen tekrar giriş yapın.', 'error');
+        setTimeout(() => { window.location.href = '/login'; }, 2000);
+      } else {
+        this.showToast(data.error || 'Hata oluştu.', 'error');
+      }
     }
   }
 

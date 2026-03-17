@@ -128,6 +128,7 @@
 
 <script>
 const API = '';
+let allMarkers = [];
 
 function showToast(msg, type) {
   const t = document.getElementById('toast');
@@ -136,31 +137,16 @@ function showToast(msg, type) {
   setTimeout(() => t.classList.remove('show'), 3000);
 }
 
-async function loadProfile() {
-  const token = localStorage.getItem('token');
-  const username = localStorage.getItem('username');
-  const userId = localStorage.getItem('userId');
-
-  if (!token) {
-    document.getElementById('not-logged-in').style.display = 'block';
-    return;
-  }
-
-  document.getElementById('profile-content').style.display = 'block';
-  document.getElementById('nav-login').style.display = 'none';
-  document.getElementById('nav-logout').style.display = 'flex';
-
-  // Fetch user info
-  const meRes = await fetch(`${API}/api/users/me`, { headers: { Authorization: `Bearer ${token}` } });
-  const me = await meRes.json();
-  document.getElementById('profile-username').textContent = me.username;
-  document.getElementById('profile-score').textContent = me.trustScore;
-
-  // Fetch my markers
-  const markersRes = await fetch(`${API}/api/users/my-markers`, { headers: { Authorization: `Bearer ${token}` } });
-  const markers = await markersRes.json();
-  document.getElementById('profile-marker-count').textContent = markers.length;
-  renderMarkers(markers);
+function handle401() {
+  localStorage.clear();
+  document.getElementById('profile-content').style.display = 'none';
+  document.getElementById('not-logged-in').style.display = 'block';
+  document.getElementById('not-logged-in').innerHTML = `
+    <div style="font-size:3rem;margin-bottom:16px">⏱️</div>
+    <h2 style="color:var(--primary);margin-bottom:8px">Oturumunuz Sona Erdi</h2>
+    <p style="color:var(--text-secondary);margin-bottom:20px">Lütfen tekrar giriş yapın.</p>
+    <a href="/login" class="btn-primary" style="display:inline-block;text-decoration:none;padding:11px 32px">Giriş Yap</a>
+  `;
 }
 
 const SIZE_LABELS = { small: 'Küçük', medium: 'Orta', large: 'Büyük' };
@@ -169,7 +155,7 @@ const CLASS_COLORS = { friendly: '#2E7D32', aggressive: '#C62828' };
 
 function renderMarkers(markers) {
   const container = document.getElementById('profile-markers');
-  if (markers.length === 0) {
+  if (!Array.isArray(markers) || markers.length === 0) {
     container.innerHTML = '<div style="padding:30px;text-align:center;color:#999">Henüz ihbar eklemediniz.</div>';
     return;
   }
@@ -178,10 +164,10 @@ function renderMarkers(markers) {
       <div class="profile-marker-info">
         <div class="profile-marker-header">
           <span class="profile-class-badge" style="background:${CLASS_COLORS[m.classification] || '#757575'}">${CLASS_LABELS[m.classification] || '?'}</span>
-          <span class="profile-marker-addr">📍 ${m.address || `${m.lat.toFixed(4)}, ${m.lng.toFixed(4)}`}</span>
+          <span class="profile-marker-addr">📍 ${m.address || (m.lat && m.lng ? m.lat.toFixed(4) + ', ' + m.lng.toFixed(4) : '')}</span>
         </div>
         <div class="popup-badges" style="margin:6px 0">
-          ${m.size ? `<span class="popup-badge">${SIZE_LABELS[m.size]}</span>` : ''}
+          ${m.size ? `<span class="popup-badge">${SIZE_LABELS[m.size] || m.size}</span>` : ''}
           ${m.color ? `<span class="popup-badge">${m.color}</span>` : ''}
           ${m.earTagColor && m.earTagColor !== 'yok' ? `<span class="popup-badge">Küpe: ${m.earTagColor}</span>` : ''}
         </div>
@@ -200,12 +186,43 @@ function renderMarkers(markers) {
   `).join('');
 }
 
-let allMarkers = [];
+async function loadProfile() {
+  const token = localStorage.getItem('token');
+
+  if (!token) {
+    document.getElementById('not-logged-in').style.display = 'block';
+    return;
+  }
+
+  // Validate session first
+  const meRes = await fetch(`${API}/api/users/me`, { headers: { Authorization: `Bearer ${token}` } });
+  if (meRes.status === 401) { handle401(); return; }
+
+  const me = await meRes.json();
+
+  document.getElementById('profile-content').style.display = 'block';
+  document.getElementById('nav-login').style.display = 'none';
+  document.getElementById('nav-logout').style.display = 'flex';
+
+  document.getElementById('profile-username').textContent = me.username || localStorage.getItem('username') || '—';
+  document.getElementById('profile-score').textContent = me.trustScore ?? 0;
+
+  // Fetch my markers
+  const markersRes = await fetch(`${API}/api/users/my-markers`, { headers: { Authorization: `Bearer ${token}` } });
+  if (markersRes.status === 401) { handle401(); return; }
+
+  const markers = await markersRes.json();
+  allMarkers = Array.isArray(markers) ? markers : [];
+  document.getElementById('profile-marker-count').textContent = allMarkers.length;
+  renderMarkers(allMarkers);
+}
 
 async function reloadMarkers() {
   const token = localStorage.getItem('token');
   const res = await fetch(`${API}/api/users/my-markers`, { headers: { Authorization: `Bearer ${token}` } });
-  allMarkers = await res.json();
+  if (res.status === 401) { handle401(); return; }
+  const data = await res.json();
+  allMarkers = Array.isArray(data) ? data : [];
   document.getElementById('profile-marker-count').textContent = allMarkers.length;
   renderMarkers(allMarkers);
 }
@@ -231,6 +248,7 @@ async function deleteMarker(id) {
     method: 'DELETE',
     headers: { Authorization: `Bearer ${token}` },
   });
+  if (res.status === 401) { handle401(); return; }
   if (res.ok) {
     showToast('İhbar silindi.', 'success');
     await reloadMarkers();
@@ -261,6 +279,7 @@ document.getElementById('edit-marker-form').addEventListener('submit', async (e)
     headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
     body: JSON.stringify(body),
   });
+  if (res.status === 401) { handle401(); return; }
   if (res.ok) {
     document.getElementById('edit-marker-modal').style.display = 'none';
     showToast('Güncellendi.', 'success');
@@ -275,13 +294,7 @@ document.getElementById('nav-logout').addEventListener('click', () => {
   localStorage.clear(); window.location.href = '/login';
 });
 
-document.addEventListener('DOMContentLoaded', () => {
-  loadProfile().then(() => {
-    fetch(`${API}/api/users/my-markers`, {
-      headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
-    }).then(r => r.json()).then(m => { allMarkers = m; });
-  });
-});
+document.addEventListener('DOMContentLoaded', loadProfile);
 </script>
 </body>
 </html>

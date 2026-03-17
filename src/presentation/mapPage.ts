@@ -8,6 +8,23 @@ declare global {
   }
 }
 
+async function checkSession(): Promise<boolean> {
+  const token = localStorage.getItem('token');
+  if (!token) return false;
+  try {
+    const res = await fetch('/api/users/me', {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    if (res.status === 401) {
+      localStorage.clear();
+      return false;
+    }
+    return true;
+  } catch {
+    return false;
+  }
+}
+
 async function init() {
   const token = localStorage.getItem('token');
   const username = localStorage.getItem('username');
@@ -16,10 +33,18 @@ async function init() {
   const userInfo = document.getElementById('nav-user');
   const logoutBtn = document.getElementById('nav-logout');
 
-  if (token && username) {
+  // Validate session on load — clears stale tokens silently
+  const sessionValid = token ? await checkSession() : false;
+  const activeToken = sessionValid ? token : null;
+
+  if (activeToken && username) {
     if (loginBtn) loginBtn.style.display = 'none';
     if (userInfo) { userInfo.style.display = 'flex'; userInfo.textContent = `👤 ${username}`; }
     if (logoutBtn) logoutBtn.style.display = 'flex';
+  } else if (token && !sessionValid) {
+    // Token was in storage but is now invalid — show a hint
+    const hint = document.getElementById('map-hint');
+    if (hint) hint.textContent = '⚠️ Oturumunuz sona erdi. Tekrar giriş yapın.';
   }
 
   logoutBtn?.addEventListener('click', () => {
@@ -32,7 +57,7 @@ async function init() {
   await mapView.loadMarkers();
 
   // Notifications
-  if (token) {
+  if (activeToken) {
     const notifPanel = new NotificationPanel('notif-container', 'notif-badge', 'notif-list');
     window.notifPanel = notifPanel;
     await notifPanel.load();

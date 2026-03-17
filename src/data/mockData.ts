@@ -1,4 +1,4 @@
-import { Marker, User, Validation } from '../interfaces/types';
+import { Marker, User, Validation, Notification } from '../interfaces/types';
 
 export const mockUsers: User[] = [
   { id: 'u1', username: 'mehmet_can', email: 'mehmet@example.com', password: '1234', trustScore: 24, role: 'user' },
@@ -87,8 +87,6 @@ export const mockMarkers: Marker[] = [
 ];
 
 export const mockValidations: Validation[] = [];
-
-import { Notification } from '../interfaces/types';
 
 export const mockNotifications: Notification[] = [
   {
