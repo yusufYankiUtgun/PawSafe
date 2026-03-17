@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>PawSafe — Profil</title>
+  <link rel="stylesheet" href="/css/style.css"/>
+</head>
+<body>
+
+<nav class="navbar">
+  <a href="/" class="navbar-brand"><span class="paw-icon">🐾</span> PawSafe</a>
+  <div class="navbar-links">
+    <a href="/" class="nav-link">🗺️ Harita</a>
+    <a href="/leaderboard" class="nav-link">🏆 Sıralama</a>
+    <a href="/shelter" class="nav-link">🏠 Barınaklar</a>
+    <a href="/donation" class="nav-link">❤️ Bağış</a>
+    <a href="/profile" class="nav-link active">👤 Profil</a>
+    <a id="nav-login" href="/login" class="nav-btn primary">Giriş Yap</a>
+    <button id="nav-logout" class="nav-btn" style="display:none">Çıkış</button>
+  </div>
+</nav>
+
+<div class="page-wrapper">
+  <!-- Redirect if not logged in -->
+  <div id="not-logged-in" style="display:none;text-align:center;padding:60px 20px">
+    <div style="font-size:3rem;margin-bottom:16px">🔒</div>
+    <h2 style="color:var(--primary);margin-bottom:8px">Giriş Gerekli</h2>
+    <p style="color:var(--text-secondary);margin-bottom:20px">Profil sayfasını görüntülemek için giriş yapın.</p>
+    <a href="/login" class="btn-primary" style="display:inline-block;text-decoration:none;padding:11px 32px">Giriş Yap</a>
+  </div>
+
+  <div id="profile-content" style="display:none">
+    <div class="page-header">
+      <h1>👤 Profilim</h1>
+      <p>İhbarlarınızı yönetin ve puanınızı takip edin</p>
+    </div>
+
+    <!-- Score card -->
+    <div class="profile-score-row">
+      <div class="stat-card">
+        <div class="stat-value" id="profile-username">—</div>
+        <div class="stat-label">Kullanıcı Adı</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value" id="profile-score" style="color:var(--accent)">0</div>
+        <div class="stat-label">Güven Puanı</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value" id="profile-marker-count">0</div>
+        <div class="stat-label">Toplam İhbar</div>
+      </div>
+    </div>
+
+    <!-- Marker history -->
+    <div class="card" style="margin-top:24px">
+      <div class="card-header">
+        <h2>📍 İhbar Geçmişim</h2>
+      </div>
+      <div id="profile-markers">
+        <div style="padding:30px;text-align:center;color:#999">Yükleniyor...</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Edit Modal (reuse same structure) -->
+<div class="modal-overlay" id="edit-marker-modal">
+  <div class="modal">
+    <div class="modal-header">
+      <h2>✏️ İhbarı Düzenle</h2>
+      <button class="modal-close" id="edit-modal-close">&times;</button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="edit-marker-id"/>
+      <form id="edit-marker-form">
+        <div class="form-group">
+          <label>Boyut</label>
+          <select id="edit-marker-size">
+            <option value="small">Küçük</option>
+            <option value="medium">Orta</option>
+            <option value="large">Büyük</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Tüy Rengi</label>
+          <select id="edit-marker-color">
+            <option value="beyaz">Beyaz</option>
+            <option value="sarı">Sarı</option>
+            <option value="kahverengi">Kahverengi</option>
+            <option value="siyah">Siyah</option>
+            <option value="gri">Gri</option>
+            <option value="benekli">Benekli</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Küpe Rengi</label>
+          <select id="edit-marker-ear-tag">
+            <option value="yok">Küpe Yok</option>
+            <option value="sarı">Sarı</option>
+            <option value="mavi">Mavi</option>
+            <option value="kırmızı">Kırmızı</option>
+            <option value="yeşil">Yeşil</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Davranış</label>
+          <div class="radio-group">
+            <label class="radio-option"><input type="radio" name="edit-classification" value="friendly"/> Zararsız</label>
+            <label class="radio-option"><input type="radio" name="edit-classification" value="aggressive"/> Zararlı</label>
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Hayvan Sayısı</label>
+          <input type="number" id="edit-marker-count" min="1" max="50" value="1"/>
+        </div>
+        <div class="form-group">
+          <label>Açıklama</label>
+          <textarea id="edit-marker-desc"></textarea>
+        </div>
+        <button type="submit" class="btn-primary">Güncelle</button>
+      </form>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const API = '';
+
+function showToast(msg, type) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = `toast ${type} show`;
+  setTimeout(() => t.classList.remove('show'), 3000);
+}
+
+async function loadProfile() {
+  const token = localStorage.getItem('token');
+  const username = localStorage.getItem('username');
+  const userId = localStorage.getItem('userId');
+
+  if (!token) {
+    document.getElementById('not-logged-in').style.display = 'block';
+    return;
+  }
+
+  document.getElementById('profile-content').style.display = 'block';
+  document.getElementById('nav-login').style.display = 'none';
+  document.getElementById('nav-logout').style.display = 'flex';
+
+  // Fetch user info
+  const meRes = await fetch(`${API}/api/users/me`, { headers: { Authorization: `Bearer ${token}` } });
+  const me = await meRes.json();
+  document.getElementById('profile-username').textContent = me.username;
+  document.getElementById('profile-score').textContent = me.trustScore;
+
+  // Fetch my markers
+  const markersRes = await fetch(`${API}/api/users/my-markers`, { headers: { Authorization: `Bearer ${token}` } });
+  const markers = await markersRes.json();
+  document.getElementById('profile-marker-count').textContent = markers.length;
+  renderMarkers(markers);
+}
+
+const SIZE_LABELS = { small: 'Küçük', medium: 'Orta', large: 'Büyük' };
+const CLASS_LABELS = { friendly: 'Zararsız', aggressive: 'Zararlı' };
+const CLASS_COLORS = { friendly: '#2E7D32', aggressive: '#C62828' };
+
+function renderMarkers(markers) {
+  const container = document.getElementById('profile-markers');
+  if (markers.length === 0) {
+    container.innerHTML = '<div style="padding:30px;text-align:center;color:#999">Henüz ihbar eklemediniz.</div>';
+    return;
+  }
+  container.innerHTML = markers.map(m => `
+    <div class="profile-marker-row" data-id="${m.id}">
+      <div class="profile-marker-info">
+        <div class="profile-marker-header">
+          <span class="profile-class-badge" style="background:${CLASS_COLORS[m.classification] || '#757575'}">${CLASS_LABELS[m.classification] || '?'}</span>
+          <span class="profile-marker-addr">📍 ${m.address || `${m.lat.toFixed(4)}, ${m.lng.toFixed(4)}`}</span>
+        </div>
+        <div class="popup-badges" style="margin:6px 0">
+          ${m.size ? `<span class="popup-badge">${SIZE_LABELS[m.size]}</span>` : ''}
+          ${m.color ? `<span class="popup-badge">${m.color}</span>` : ''}
+          ${m.earTagColor && m.earTagColor !== 'yok' ? `<span class="popup-badge">Küpe: ${m.earTagColor}</span>` : ''}
+        </div>
+        <p class="profile-marker-desc">${m.description || ''}</p>
+        <div class="profile-marker-meta">
+          <span>📅 ${m.createdAt}</span>
+          <span>🐾 ${m.animalCount} hayvan</span>
+          <span>✅ ${m.validationCount} | ⚠️ ${m.disputeCount}</span>
+        </div>
+      </div>
+      <div class="profile-marker-actions">
+        <button class="btn-edit" onclick="openEdit('${m.id}')">✏️ Düzenle</button>
+        <button class="btn-delete-marker" onclick="deleteMarker('${m.id}')">🗑️ Sil</button>
+      </div>
+    </div>
+  `).join('');
+}
+
+let allMarkers = [];
+
+async function reloadMarkers() {
+  const token = localStorage.getItem('token');
+  const res = await fetch(`${API}/api/users/my-markers`, { headers: { Authorization: `Bearer ${token}` } });
+  allMarkers = await res.json();
+  document.getElementById('profile-marker-count').textContent = allMarkers.length;
+  renderMarkers(allMarkers);
+}
+
+function openEdit(id) {
+  const m = allMarkers.find(x => x.id === id);
+  if (!m) return;
+  document.getElementById('edit-marker-id').value = m.id;
+  document.getElementById('edit-marker-desc').value = m.description;
+  document.getElementById('edit-marker-count').value = m.animalCount;
+  document.getElementById('edit-marker-size').value = m.size || 'medium';
+  document.getElementById('edit-marker-color').value = m.color || 'kahverengi';
+  document.getElementById('edit-marker-ear-tag').value = m.earTagColor || 'yok';
+  const radio = document.querySelector(`input[name="edit-classification"][value="${m.classification || 'friendly'}"]`);
+  if (radio) radio.checked = true;
+  document.getElementById('edit-marker-modal').style.display = 'flex';
+}
+
+async function deleteMarker(id) {
+  if (!confirm('Bu ihbarı silmek istediğinizden emin misiniz?')) return;
+  const token = localStorage.getItem('token');
+  const res = await fetch(`${API}/api/markers/${id}`, {
+    method: 'DELETE',
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  if (res.ok) {
+    showToast('İhbar silindi.', 'success');
+    await reloadMarkers();
+  } else {
+    const d = await res.json();
+    showToast(d.error || 'Hata.', 'error');
+  }
+}
+
+document.getElementById('edit-modal-close').addEventListener('click', () => {
+  document.getElementById('edit-marker-modal').style.display = 'none';
+});
+
+document.getElementById('edit-marker-form').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const id = document.getElementById('edit-marker-id').value;
+  const token = localStorage.getItem('token');
+  const body = {
+    description: document.getElementById('edit-marker-desc').value,
+    animalCount: parseInt(document.getElementById('edit-marker-count').value) || 1,
+    size: document.getElementById('edit-marker-size').value,
+    color: document.getElementById('edit-marker-color').value,
+    earTagColor: document.getElementById('edit-marker-ear-tag').value,
+    classification: document.querySelector('input[name="edit-classification"]:checked')?.value,
+  };
+  const res = await fetch(`${API}/api/markers/${id}`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+    body: JSON.stringify(body),
+  });
+  if (res.ok) {
+    document.getElementById('edit-marker-modal').style.display = 'none';
+    showToast('Güncellendi.', 'success');
+    await reloadMarkers();
+  } else {
+    const d = await res.json();
+    showToast(d.error || 'Hata.', 'error');
+  }
+});
+
+document.getElementById('nav-logout').addEventListener('click', () => {
+  localStorage.clear(); window.location.href = '/login';
+});
+
+document.addEventListener('DOMContentLoaded', () => {
+  loadProfile().then(() => {
+    fetch(`${API}/api/users/my-markers`, {
+      headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
+    }).then(r => r.json()).then(m => { allMarkers = m; });
+  });
+});
+</script>
+</body>
+</html>

@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>PawSafe — Barınaklar</title>
+  <link rel="stylesheet" href="/css/style.css"/>
+</head>
+<body>
+
+<nav class="navbar">
+  <a href="/" class="navbar-brand"><span class="paw-icon">🐾</span> PawSafe</a>
+  <div class="navbar-links">
+    <a href="/" class="nav-link">🗺️ Harita</a>
+    <a href="/leaderboard" class="nav-link">🏆 Sıralama</a>
+    <a href="/shelter" class="nav-link active">🏠 Barınaklar</a>
+    <a href="/donation" class="nav-link">❤️ Bağış</a>
+    <a href="/profile" class="nav-link">👤 Profil</a>
+    <a id="nav-login" href="/login" class="nav-btn primary">Giriş Yap</a>
+    <button id="nav-logout" class="nav-btn" style="display:none">Çıkış</button>
+  </div>
+</nav>
+
+<div class="page-wrapper">
+  <div class="page-header">
+    <h1>🏠 Barınaklar</h1>
+    <p>İstanbul genelindeki sokak hayvanı barınaklarına ulaşın</p>
+  </div>
+
+  <div class="shelter-grid" id="shelter-grid"></div>
+</div>
+
+<script>
+const shelters = [
+  {
+    name: 'İstanbul Büyükşehir Belediyesi Hayvan Barınağı',
+    district: 'Hadımköy, Arnavutköy',
+    phone: '0212 449 99 99',
+    email: 'hayvan@ibb.gov.tr',
+    hours: 'Hafta içi 08:00–17:00',
+    capacity: 3200,
+    icon: '🏛️',
+  },
+  {
+    name: 'Kadıköy Belediyesi Hayvan Barınağı',
+    district: 'Kadıköy',
+    phone: '0216 542 50 00',
+    email: 'veteriner@kadikoy.bel.tr',
+    hours: 'Hafta içi 08:30–17:30',
+    capacity: 420,
+    icon: '🐕',
+  },
+  {
+    name: 'Üsküdar Belediyesi Geçici Bakımevi',
+    district: 'Üsküdar',
+    phone: '0216 531 30 00',
+    email: 'veteriner@uskudar.bel.tr',
+    hours: 'Hafta içi 09:00–18:00',
+    capacity: 180,
+    icon: '🐾',
+  },
+  {
+    name: 'Fatih Belediyesi Sokak Hayvanları Birimi',
+    district: 'Fatih',
+    phone: '0212 455 13 00',
+    email: 'veteriner@fatih.bel.tr',
+    hours: 'Pazartesi–Cuma 08:00–17:00',
+    capacity: 95,
+    icon: '🏥',
+  },
+  {
+    name: 'Beşiktaş Belediyesi Hayvan Barınağı',
+    district: 'Beşiktaş',
+    phone: '0212 236 11 00',
+    email: 'hayvan@besiktas.bel.tr',
+    hours: 'Hafta içi 08:00–18:00',
+    capacity: 110,
+    icon: '🐶',
+  },
+  {
+    name: 'Eyüpsultan Belediyesi Barınağı',
+    district: 'Eyüpsultan',
+    phone: '0212 581 40 40',
+    email: 'veteriner@eyupsultan.bel.tr',
+    hours: 'Hafta içi 08:30–17:00',
+    capacity: 230,
+    icon: '🌿',
+  },
+];
+
+const grid = document.getElementById('shelter-grid');
+grid.innerHTML = shelters.map(s => `
+  <div class="shelter-card">
+    <div class="shelter-icon">${s.icon}</div>
+    <div class="shelter-body">
+      <h3 class="shelter-name">${s.name}</h3>
+      <p class="shelter-district">📍 ${s.district}</p>
+      <div class="shelter-details">
+        <span>📞 <a href="tel:${s.phone}">${s.phone}</a></span>
+        <span>✉️ <a href="mailto:${s.email}">${s.email}</a></span>
+        <span>🕐 ${s.hours}</span>
+        <span>🐾 Kapasite: ~${s.capacity} hayvan</span>
+      </div>
+    </div>
+  </div>
+`).join('');
+
+document.addEventListener('DOMContentLoaded', () => {
+  const token = localStorage.getItem('token');
+  if (token) {
+    document.getElementById('nav-login').style.display = 'none';
+    document.getElementById('nav-logout').style.display = 'flex';
+  }
+  document.getElementById('nav-logout').addEventListener('click', () => {
+    localStorage.clear(); window.location.href = '/login';
+  });
+});
+</script>
+</body>
+</html>

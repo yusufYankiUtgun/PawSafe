@@ -38,7 +38,7 @@ export class NotificationPanel {
           .reverse()
           .map(n => `
             <div class="notif-item ${n.read ? '' : 'unread'} ${n.type}" data-id="${n.id}">
-              <span class="notif-icon">${n.type === 'success' ? '✅' : '⚠️'}</span>
+              <span class="notif-icon">${n.type === 'success' ? '✅' : n.type === 'info' ? '📢' : '⚠️'}</span>
               <span class="notif-msg">${n.message}</span>
             </div>
           `)

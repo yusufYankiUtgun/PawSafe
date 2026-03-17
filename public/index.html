@@ -6,6 +6,8 @@
   <title>PawSafe — Harita</title>
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
   <link rel="stylesheet" href="/css/style.css"/>
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script src="https://unpkg.com/leaflet.heat@0.2.0/dist/leaflet-heat.js"></script>
 </head>
 <body>
 
@@ -53,6 +55,9 @@
   <div class="navbar-links">
     <a href="/" class="nav-link active">🗺️ Harita</a>
     <a href="/leaderboard" class="nav-link">🏆 Sıralama</a>
+    <a href="/shelter" class="nav-link">🏠 Barınaklar</a>
+    <a href="/donation" class="nav-link">❤️ Bağış</a>
+    <a href="/profile" class="nav-link">👤 Profil</a>
     <span id="nav-user" style="display:none"></span>
     <span id="notif-container" style="display:none">
       <button id="notif-btn" title="Bildirimler">🔔</button>
@@ -72,6 +77,9 @@
 
 <!-- MAP HINT -->
 <div class="map-hint" id="map-hint">📍 Marker eklemek için haritaya tıklayın (giriş gerekli)</div>
+
+<!-- HEATMAP TOGGLE -->
+<button class="heatmap-btn" id="heatmap-toggle" title="Isı Haritasını Aç/Kapat">🌡️ Isı Haritası</button>
 
 <!-- ADD MARKER MODAL -->
 <div class="modal-overlay" id="add-marker-modal">
@@ -243,6 +251,13 @@
       document.getElementById('notif-container').style.display = 'inline-block';
       document.getElementById('map-hint').textContent = '📍 Marker eklemek için haritaya tıklayın';
     }
+
+    // Heatmap toggle
+    const heatBtn = document.getElementById('heatmap-toggle');
+    heatBtn.addEventListener('click', () => {
+      const on = window.mapView.toggleHeatmap();
+      heatBtn.classList.toggle('active', on);
+    });
   });
 </script>
 </body>

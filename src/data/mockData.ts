@@ -87,3 +87,48 @@ export const mockMarkers: Marker[] = [
 ];
 
 export const mockValidations: Validation[] = [];
+
+import { Notification } from '../interfaces/types';
+
+export const mockNotifications: Notification[] = [
+  {
+    id: 'n1', userId: 'u1',
+    message: 'Eminönü ihbarınız 7 kişi tarafından doğrulandı!',
+    type: 'success', createdAt: '2026-04-10T10:00:00Z', read: false,
+  },
+  {
+    id: 'n2', userId: 'u1',
+    message: 'Yakınınızda yeni bir köpek ihbarı eklendi: Üsküdar.',
+    type: 'info', createdAt: '2026-04-13T08:30:00Z', read: false,
+  },
+  {
+    id: 'n3', userId: 'u2',
+    message: 'Kadıköy ihbarınız 11 kişi tarafından doğrulandı!',
+    type: 'success', createdAt: '2026-04-07T14:00:00Z', read: true,
+  },
+  {
+    id: 'n4', userId: 'u2',
+    message: 'Yakınınızda yeni bir köpek ihbarı eklendi: Fatih.',
+    type: 'info', createdAt: '2026-04-13T09:15:00Z', read: false,
+  },
+  {
+    id: 'n5', userId: 'u3',
+    message: 'Sultanahmet ihbarınız itiraz aldı. Kontrol edin.',
+    type: 'error', createdAt: '2026-04-12T16:00:00Z', read: false,
+  },
+  {
+    id: 'n6', userId: 'u4',
+    message: 'Beyazıt ihbarınız 9 kişi tarafından doğrulandı!',
+    type: 'success', createdAt: '2026-04-09T11:00:00Z', read: true,
+  },
+  {
+    id: 'n7', userId: 'u5',
+    message: 'Yakınınızda yeni bir köpek ihbarı eklendi: Sultanahmet.',
+    type: 'info', createdAt: '2026-04-14T07:45:00Z', read: false,
+  },
+  {
+    id: 'n8', userId: 'u6',
+    message: 'Bahçelievler ihbarınız 2 kişi tarafından doğrulandı.',
+    type: 'success', createdAt: '2026-04-14T12:00:00Z', read: false,
+  },
+];

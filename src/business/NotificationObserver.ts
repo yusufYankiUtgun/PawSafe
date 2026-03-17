@@ -1,8 +1,9 @@
 import { IObserver } from '../interfaces/IObserver';
 import { ValidationEvent, Notification } from '../interfaces/types';
+import { mockNotifications } from '../data/mockData';
 
 export class NotificationObserver implements IObserver {
-  private notifications: Notification[] = [];
+  private notifications: Notification[] = [...mockNotifications];
 
   update(event: ValidationEvent): void {
     const notification: Notification = {

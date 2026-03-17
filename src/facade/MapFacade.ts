@@ -1,8 +1,13 @@
 import * as L from 'leaflet';
 
+// leaflet-heat is loaded via CDN; access through global L
+declare const HeatmapLayerFactory: any;
+
 export class MapFacade {
   private map: L.Map;
   private markers: Map<string, L.Marker> = new Map();
+  private heatLayer: any = null;
+  private heatVisible = false;
 
   constructor(containerId: string, center: [number, number] = [41.015, 28.979], zoom: number = 12) {
     this.map = L.map(containerId, { center, zoom });
@@ -66,6 +71,37 @@ export class MapFacade {
 
   onMapClick(handler: (lat: number, lng: number) => void): void {
     this.map.on('click', (e: L.LeafletMouseEvent) => handler(e.latlng.lat, e.latlng.lng));
+  }
+
+  updateHeatmap(points: [number, number, number][]): void {
+    const L_any = L as any;
+    if (this.heatLayer) {
+      this.map.removeLayer(this.heatLayer);
+      this.heatLayer = null;
+    }
+    if (typeof L_any.heatLayer === 'function') {
+      this.heatLayer = L_any.heatLayer(points, {
+        radius: 35,
+        blur: 20,
+        maxZoom: 17,
+        gradient: { 0.4: '#2196F3', 0.65: '#FF9800', 1.0: '#F44336' },
+      });
+      if (this.heatVisible) {
+        this.heatLayer.addTo(this.map);
+      }
+    }
+  }
+
+  toggleHeatmap(): boolean {
+    if (!this.heatLayer) return false;
+    if (this.heatVisible) {
+      this.map.removeLayer(this.heatLayer);
+      this.heatVisible = false;
+    } else {
+      this.heatLayer.addTo(this.map);
+      this.heatVisible = true;
+    }
+    return this.heatVisible;
   }
 
   getMap(): L.Map {

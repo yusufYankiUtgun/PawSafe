@@ -58,6 +58,8 @@ app.use('/api/admin', createAdminRouter(authService, markerService, userRepo));
 // Serve HTML pages
 app.get('/leaderboard', (_req, res) => res.sendFile(path.join(__dirname, '../public/leaderboard.html')));
 app.get('/profile', (_req, res) => res.sendFile(path.join(__dirname, '../public/profile.html')));
+app.get('/shelter', (_req, res) => res.sendFile(path.join(__dirname, '../public/shelter.html')));
+app.get('/donation', (_req, res) => res.sendFile(path.join(__dirname, '../public/donation.html')));
 app.get('/admin', (_req, res) => res.sendFile(path.join(__dirname, '../public/admin.html')));
 app.get('/login', (_req, res) => res.sendFile(path.join(__dirname, '../public/login.html')));
 app.get('*', (_req, res) => res.sendFile(path.join(__dirname, '../public/index.html')));

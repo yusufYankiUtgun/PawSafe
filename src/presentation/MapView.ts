@@ -237,6 +237,10 @@ export class MapView {
     }
   }
 
+  toggleHeatmap(): boolean {
+    return this.facade.toggleHeatmap();
+  }
+
   closeModal(): void {
     (document.getElementById('add-marker-modal') as HTMLElement).style.display = 'none';
     this.selectedLat = null;

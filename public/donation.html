@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>PawSafe — Bağış Yap</title>
+  <link rel="stylesheet" href="/css/style.css"/>
+</head>
+<body>
+
+<nav class="navbar">
+  <a href="/" class="navbar-brand"><span class="paw-icon">🐾</span> PawSafe</a>
+  <div class="navbar-links">
+    <a href="/" class="nav-link">🗺️ Harita</a>
+    <a href="/leaderboard" class="nav-link">🏆 Sıralama</a>
+    <a href="/shelter" class="nav-link">🏠 Barınaklar</a>
+    <a href="/donation" class="nav-link active">❤️ Bağış</a>
+    <a href="/profile" class="nav-link">👤 Profil</a>
+    <a id="nav-login" href="/login" class="nav-btn primary">Giriş Yap</a>
+    <button id="nav-logout" class="nav-btn" style="display:none">Çıkış</button>
+  </div>
+</nav>
+
+<div class="page-wrapper" style="max-width:700px">
+  <div class="page-header">
+    <h1>❤️ Bağış Yap</h1>
+    <p>Sokak hayvanlarının yaşam koşullarını iyileştirmek için destek olun</p>
+  </div>
+
+  <!-- Impact stats -->
+  <div class="stats-grid" style="margin-bottom:28px">
+    <div class="stat-card">
+      <div class="stat-value">1.200+</div>
+      <div class="stat-label">Kurtarılan Hayvan</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-value">8.500+</div>
+      <div class="stat-label">Bağışçı</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-value">42</div>
+      <div class="stat-label">Desteklenen Barınak</div>
+    </div>
+  </div>
+
+  <!-- Why donate -->
+  <div class="card" style="margin-bottom:24px">
+    <div class="card-header"><h2>Neden Bağış Yapmalıyım?</h2></div>
+    <div style="padding:20px;display:flex;flex-direction:column;gap:14px">
+      <div class="donation-reason">
+        <span class="donation-icon">🍽️</span>
+        <div>
+          <strong>Mama Desteği</strong>
+          <p>Barınaklardaki her hayvanın günlük mama ihtiyacı ortalama 15 TL. Küçük bağışlar büyük fark yaratır.</p>
+        </div>
+      </div>
+      <div class="donation-reason">
+        <span class="donation-icon">💉</span>
+        <div>
+          <strong>Veteriner Hizmetleri</strong>
+          <p>Yaralı ve hasta sokak hayvanlarının tedavisi için veteriner masrafları karşılanmaktadır.</p>
+        </div>
+      </div>
+      <div class="donation-reason">
+        <span class="donation-icon">🏠</span>
+        <div>
+          <strong>Barınak Altyapısı</strong>
+          <p>Barınak genişletme, temizlik ve ısınma sistemleri için altyapı yatırımları yapılmaktadır.</p>
+        </div>
+      </div>
+      <div class="donation-reason">
+        <span class="donation-icon">🔖</span>
+        <div>
+          <strong>Küpe ve Kısırlaştırma</strong>
+          <p>Sokak hayvanı nüfusunu kontrol altına almak için küpeleme ve kısırlaştırma kampanyaları yürütülmektedir.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Donation channels -->
+  <div class="card" style="margin-bottom:24px">
+    <div class="card-header"><h2>Nasıl Bağış Yapabilirim?</h2></div>
+    <div style="padding:20px;display:flex;flex-direction:column;gap:16px">
+
+      <div class="donation-channel">
+        <div class="donation-channel-icon">🏦</div>
+        <div>
+          <strong>Banka Havalesi / EFT</strong>
+          <p style="font-size:0.85rem;color:var(--text-secondary);margin:4px 0 0">IBAN: TR00 0000 0000 0000 0000 0000 00<br/>Alıcı: PawSafe Derneği<br/>Açıklama: Sokak Hayvanı Bağışı</p>
+        </div>
+      </div>
+
+      <div class="donation-channel">
+        <div class="donation-channel-icon">📱</div>
+        <div>
+          <strong>Mobil Ödeme</strong>
+          <p style="font-size:0.85rem;color:var(--text-secondary);margin:4px 0 0">0530 000 00 00 numarasına "PAWSAFE" yazarak gönderin.<br/>(Turkcell, Vodafone, Türk Telekom destekli)</p>
+        </div>
+      </div>
+
+      <div class="donation-channel">
+        <div class="donation-channel-icon">🌐</div>
+        <div>
+          <strong>Online Bağış Platformları</strong>
+          <p style="font-size:0.85rem;color:var(--text-secondary);margin:4px 0 0">İhtiyaç Haritası, Hayırsever.org ve Bağış.com üzerinden PawSafe sayfamıza ulaşabilirsiniz.</p>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Disclaimer -->
+  <div class="donation-disclaimer">
+    <span>ℹ️</span>
+    <p>Bu sayfa yalnızca bilgilendirme amaçlıdır. PawSafe, bağış işlemlerini doğrudan gerçekleştirmemektedir. Tüm bağışlar ilgili barınak ve derneklere yönlendirilir.</p>
+  </div>
+</div>
+
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+    const token = localStorage.getItem('token');
+    if (token) {
+      document.getElementById('nav-login').style.display = 'none';
+      document.getElementById('nav-logout').style.display = 'flex';
+    }
+    document.getElementById('nav-logout').addEventListener('click', () => {
+      localStorage.clear(); window.location.href = '/login';
+    });
+  });
+</script>
+</body>
+</html>
