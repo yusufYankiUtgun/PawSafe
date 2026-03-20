@@ -3,6 +3,14 @@ export type DogColor = 'beyaz' | 'sarı' | 'kahverengi' | 'siyah' | 'gri' | 'ben
 export type EarTagColor = 'yok' | 'sarı' | 'mavi' | 'kırmızı' | 'yeşil';
 export type DogClassification = 'friendly' | 'aggressive';
 
+export type DisputeReason =
+  | 'inappropriate'
+  | 'irrelevant'
+  | 'false_report'
+  | 'duplicate'
+  | 'spam'
+  | 'other';
+
 export interface Marker {
   id: string;
   lat: number;
@@ -38,6 +46,8 @@ export interface Validation {
   userId: string;
   type: 'validate' | 'dispute';
   createdAt: string;
+  reason?: DisputeReason;
+  explanation?: string;
 }
 
 export interface ValidationEvent {
@@ -45,6 +55,8 @@ export interface ValidationEvent {
   reporterId: string;
   validationType: 'validate' | 'dispute';
   validatorId: string;
+  reason?: DisputeReason;
+  explanation?: string;
 }
 
 export interface Score {

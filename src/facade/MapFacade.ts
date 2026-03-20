@@ -1,8 +1,19 @@
 import * as L from 'leaflet';
 
-// leaflet-heat is loaded via CDN; access through global L
-declare const HeatmapLayerFactory: any;
-
+/**
+ * MapFacade encapsulates all Leaflet interactions.
+ *
+ * Facade Pattern:
+ *  – Hides Leaflet API complexity from higher-level presentation code.
+ *  – A single point of change if the map library is ever replaced.
+ *
+ * Heatmap note:
+ *  leaflet.heat is loaded from CDN and attaches itself to the *global*
+ *  window.L, not to the esbuild-bundled Leaflet module.  We therefore
+ *  reach L.heatLayer through window.L so that the CDN extension is found.
+ *  The map instance itself is created with the bundled Leaflet and is fully
+ *  compatible with CDN-sourced layer objects (same version, same protocol).
+ */
 export class MapFacade {
   private map: L.Map;
   private markers: Map<string, L.Marker> = new Map();
@@ -73,14 +84,22 @@ export class MapFacade {
     this.map.on('click', (e: L.LeafletMouseEvent) => handler(e.latlng.lat, e.latlng.lng));
   }
 
+  /**
+   * Build (or rebuild) the heat layer from the supplied points.
+   * Uses window.L.heatLayer so that the CDN-loaded leaflet.heat extension
+   * is found at runtime regardless of the module bundling.
+   */
   updateHeatmap(points: [number, number, number][]): void {
-    const L_any = L as any;
     if (this.heatLayer) {
       this.map.removeLayer(this.heatLayer);
       this.heatLayer = null;
     }
-    if (typeof L_any.heatLayer === 'function') {
-      this.heatLayer = L_any.heatLayer(points, {
+    // Access leaflet.heat through the CDN global, not the bundled module
+    const globalL: any = (typeof window !== 'undefined') ? (window as any).L : undefined;
+    const heatFn = globalL?.heatLayer ?? (L as any).heatLayer;
+
+    if (typeof heatFn === 'function') {
+      this.heatLayer = heatFn(points, {
         radius: 35,
         blur: 20,
         maxZoom: 17,
@@ -101,6 +120,28 @@ export class MapFacade {
       this.heatLayer.addTo(this.map);
       this.heatVisible = true;
     }
+    return this.heatVisible;
+  }
+
+  /** Show heatmap layer (idempotent). Returns false if no heat data yet. */
+  showHeatmap(): boolean {
+    if (!this.heatLayer) return false;
+    if (!this.heatVisible) {
+      this.heatLayer.addTo(this.map);
+      this.heatVisible = true;
+    }
+    return true;
+  }
+
+  /** Hide heatmap layer (idempotent). */
+  hideHeatmap(): void {
+    if (this.heatLayer && this.heatVisible) {
+      this.map.removeLayer(this.heatLayer);
+      this.heatVisible = false;
+    }
+  }
+
+  isHeatmapVisible(): boolean {
     return this.heatVisible;
   }
 

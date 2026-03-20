@@ -12,7 +12,12 @@ export class LeaderboardObserver implements IObserver {
   }
 
   rerank(): { userId: string; username: string; trustScore: number; role: string }[] {
-    return this.userRepo.getLeaderboard();
+    return this.userRepo.getLeaderboard().map(u => ({
+      userId: u.id,
+      username: u.username,
+      trustScore: u.trustScore,
+      role: u.role,
+    }));
   }
 
   getLastUpdate(): number {

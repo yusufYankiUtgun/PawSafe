@@ -88,41 +88,57 @@
       <h2>🐾 Yeni İhbar Ekle</h2>
       <button class="modal-close" id="modal-close">&times;</button>
     </div>
+
+    <!-- Scrollable body: grows up to max-height, then scrolls -->
     <div class="modal-body">
       <div class="coord-preview" id="coord-preview">Konum seçilmedi</div>
+
       <form id="add-marker-form">
-        <div class="form-group">
-          <label>Boyut <span class="req">*</span></label>
-          <select id="marker-size" required>
-            <option value="">— Seçin —</option>
-            <option value="small">Küçük</option>
-            <option value="medium">Orta</option>
-            <option value="large">Büyük</option>
-          </select>
+        <!-- Row 1: Boyut + Tüy Rengi side by side -->
+        <div class="form-row-2">
+          <div class="form-group">
+            <label>Boyut <span class="req">*</span></label>
+            <select id="marker-size" required>
+              <option value="">— Seçin —</option>
+              <option value="small">Küçük</option>
+              <option value="medium">Orta</option>
+              <option value="large">Büyük</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Tüy Rengi <span class="req">*</span></label>
+            <select id="marker-color" required>
+              <option value="">— Seçin —</option>
+              <option value="beyaz">Beyaz</option>
+              <option value="sarı">Sarı</option>
+              <option value="kahverengi">Kahverengi</option>
+              <option value="siyah">Siyah</option>
+              <option value="gri">Gri</option>
+              <option value="benekli">Benekli</option>
+            </select>
+          </div>
         </div>
-        <div class="form-group">
-          <label>Tüy Rengi <span class="req">*</span></label>
-          <select id="marker-color" required>
-            <option value="">— Seçin —</option>
-            <option value="beyaz">Beyaz</option>
-            <option value="sarı">Sarı</option>
-            <option value="kahverengi">Kahverengi</option>
-            <option value="siyah">Siyah</option>
-            <option value="gri">Gri</option>
-            <option value="benekli">Benekli</option>
-          </select>
+
+        <!-- Row 2: Küpe Rengi + Hayvan Sayısı side by side -->
+        <div class="form-row-2">
+          <div class="form-group">
+            <label>Küpe Rengi <span class="req">*</span></label>
+            <select id="marker-ear-tag" required>
+              <option value="">— Seçin —</option>
+              <option value="yok">Küpe Yok</option>
+              <option value="sarı">Sarı</option>
+              <option value="mavi">Mavi</option>
+              <option value="kırmızı">Kırmızı</option>
+              <option value="yeşil">Yeşil</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Hayvan Sayısı</label>
+            <input type="number" id="marker-count" min="1" max="50" value="1"/>
+          </div>
         </div>
-        <div class="form-group">
-          <label>Küpe Rengi <span class="req">*</span></label>
-          <select id="marker-ear-tag" required>
-            <option value="">— Seçin —</option>
-            <option value="yok">Küpe Yok</option>
-            <option value="sarı">Sarı</option>
-            <option value="mavi">Mavi</option>
-            <option value="kırmızı">Kırmızı</option>
-            <option value="yeşil">Yeşil</option>
-          </select>
-        </div>
+
+        <!-- Row 3: Davranış (full width) -->
         <div class="form-group">
           <label>Davranış <span class="req">*</span></label>
           <div class="radio-group">
@@ -134,16 +150,25 @@
             </label>
           </div>
         </div>
-        <div class="form-group">
-          <label>Hayvan Sayısı</label>
-          <input type="number" id="marker-count" min="1" max="50" value="1"/>
-        </div>
+
+        <!-- Row 4: Açıklama -->
         <div class="form-group">
           <label>Açıklama</label>
           <textarea id="marker-desc" placeholder="Eklemek istediğiniz bilgiler..."></textarea>
         </div>
-        <button type="submit" class="btn-primary">Devam Et →</button>
+
+        <!-- Row 5: Fotoğraf -->
+        <div class="form-group">
+          <label>Fotoğraf <span class="field-hint">(isteğe bağlı, JPEG/PNG, max 5 MB)</span></label>
+          <input type="file" id="marker-image" accept="image/jpeg,image/png" class="file-input"/>
+          <img id="image-preview" class="image-preview" style="display:none" alt="Önizleme"/>
+        </div>
       </form>
+    </div>
+
+    <!-- Sticky footer: always visible, submit button never hidden -->
+    <div class="modal-footer">
+      <button type="submit" form="add-marker-form" class="btn-primary">Devam Et →</button>
     </div>
   </div>
 </div>
@@ -228,6 +253,40 @@
   </div>
 </div>
 
+<!-- DISPUTE MODAL -->
+<div class="modal-overlay" id="dispute-modal">
+  <div class="modal modal-sm">
+    <div class="modal-header">
+      <h2>⚠️ İtiraz Gönder</h2>
+      <button class="modal-close" id="dispute-modal-close">&times;</button>
+    </div>
+    <div class="modal-body">
+      <form id="dispute-form">
+        <div class="form-group">
+          <label>İtiraz Nedeni <span class="req">*</span></label>
+          <select id="dispute-reason" required>
+            <option value="">— Neden seçin —</option>
+            <option value="inappropriate">Uygunsuz içerik</option>
+            <option value="irrelevant">Alakasız</option>
+            <option value="false_report">Yanlış ihbar</option>
+            <option value="duplicate">Mükerrer (tekrarlayan)</option>
+            <option value="spam">Spam</option>
+            <option value="other">Diğer</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Açıklama <span class="field-hint">(isteğe bağlı, max 500 karakter)</span></label>
+          <textarea id="dispute-explanation" placeholder="Daha fazla bilgi ekleyin..." maxlength="500"></textarea>
+        </div>
+        <div class="dispute-actions">
+          <button type="button" class="btn-secondary" id="dispute-cancel">İptal</button>
+          <button type="submit" class="btn-danger">İtiraz Gönder</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
 <!-- TOAST -->
 <div class="toast" id="toast"></div>
 
@@ -257,6 +316,7 @@
     heatBtn.addEventListener('click', () => {
       const on = window.mapView.toggleHeatmap();
       heatBtn.classList.toggle('active', on);
+      heatBtn.textContent = on ? '🗺️ Normal Görünüm' : '🌡️ Isı Haritası';
     });
   });
 </script>

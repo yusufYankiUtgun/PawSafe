@@ -48,9 +48,11 @@ const app = express();
 app.use(cors());
 app.use(express.json({ limit: '5mb' }));
 app.use(express.static(path.join(__dirname, '../public')));
+// Serve uploaded images
+app.use('/uploads', express.static(path.join(__dirname, '../public/uploads')));
 
 // API routes
-app.use('/api/markers', createMarkersRouter(markerService, authService));
+app.use('/api/markers', createMarkersRouter(markerService, authService, imageUploadService));
 app.use('/api/users', createUsersRouter(authService, notificationObserver, markerService));
 app.use('/api/validations', createValidationsRouter(validationService, authService, leaderboardObserver));
 app.use('/api/admin', createAdminRouter(authService, markerService, userRepo));
@@ -64,7 +66,11 @@ app.get('/admin', (_req, res) => res.sendFile(path.join(__dirname, '../public/ad
 app.get('/login', (_req, res) => res.sendFile(path.join(__dirname, '../public/login.html')));
 app.get('*', (_req, res) => res.sendFile(path.join(__dirname, '../public/index.html')));
 
-const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => {
-  console.log(`PawSafe running at http://localhost:${PORT}`);
-});
+export { app };  // export for integration tests
+
+if (require.main === module) {
+  const PORT = process.env.PORT || 3000;
+  app.listen(PORT, () => {
+    console.log(`PawSafe running at http://localhost:${PORT}`);
+  });
+}

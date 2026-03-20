@@ -1,11 +1,13 @@
 import { MapFacade } from '../facade/MapFacade';
 import { Marker } from '../interfaces/types';
+import { IMapViewStrategy } from '../interfaces/IMapViewStrategy';
+import { MarkerViewStrategy } from './MarkerViewStrategy';
+import { HeatmapViewStrategy } from './HeatmapViewStrategy';
 
 const API = '';
 
-const SIZE_LABELS: Record<string, string> = { small: 'Küçük', medium: 'Orta', large: 'Büyük' };
-const CLASS_LABELS: Record<string, string> = { friendly: 'Zararsız', aggressive: 'Zararlı' };
-const CLASS_COLORS: Record<string, string> = { friendly: '#2E7D32', aggressive: '#C62828' };
+const MAX_IMAGE_SIZE_BYTES = 5 * 1024 * 1024;
+const ALLOWED_MIME_TYPES = new Set(['image/jpeg', 'image/png']);
 
 async function fetchAddress(lat: number, lng: number): Promise<string> {
   try {
@@ -28,12 +30,25 @@ async function fetchAddress(lat: number, lng: number): Promise<string> {
 export class MapView {
   private facade: MapFacade;
   private markers: Marker[] = [];
+
   private selectedLat: number | null = null;
   private selectedLng: number | null = null;
   private selectedAddress: string = '';
 
+  /** Dispute modal state */
+  private pendingDisputeMarkerId: string | null = null;
+
+  /** Strategy Pattern: current map rendering mode */
+  private currentStrategy: IMapViewStrategy;
+  private markerStrategy: IMapViewStrategy;
+  private heatmapStrategy: IMapViewStrategy;
+
   constructor() {
     this.facade = new MapFacade('map');
+    this.markerStrategy = new MarkerViewStrategy(this.facade);
+    this.heatmapStrategy = new HeatmapViewStrategy(this.facade);
+    this.currentStrategy = this.markerStrategy;
+
     this.facade.onMapClick((lat, lng) => this.onMapClick(lat, lng));
   }
 
@@ -57,72 +72,34 @@ export class MapView {
   async loadMarkers(): Promise<void> {
     const res = await fetch(`${API}/api/markers`);
     this.markers = await res.json();
-    this.facade.clearMarkers();
-    this.markers.forEach(m => this.addMarkerToMap(m));
-    this.facade.updateHeatmap(this.markers.map(m => [m.lat, m.lng, 1]));
+    this.currentStrategy.render(this.markers);
   }
 
-  private addMarkerToMap(m: Marker): void {
-    const danger: 'low' | 'medium' | 'high' =
-      m.classification === 'aggressive' ? (m.validationCount >= 5 ? 'high' : 'medium') : 'low';
-    const popup = this.buildPopup(m);
-    this.facade.addMarker(m.id, m.lat, m.lng, popup, danger);
+  /**
+   * Toggle between marker view and heatmap view (Strategy Pattern).
+   * Returns true if heatmap mode is now active.
+   */
+  toggleMapMode(): boolean {
+    this.currentStrategy.clear();
+    if (this.currentStrategy === this.markerStrategy) {
+      this.currentStrategy = this.heatmapStrategy;
+    } else {
+      this.currentStrategy = this.markerStrategy;
+    }
+    this.currentStrategy.render(this.markers);
+    return this.currentStrategy.getName() === 'heatmap';
   }
 
-  private buildPopup(m: Marker): string {
-    const currentUserId = localStorage.getItem('userId');
+  /** Legacy shim so the inline <script> in index.html still works. */
+  toggleHeatmap(): boolean {
+    return this.toggleMapMode();
+  }
+
+  // ─── Validation / dispute ────────────────────────────────────────────────
+
+  async vote(markerId: string, type: 'validate'): Promise<void> {
     const token = localStorage.getItem('token');
-    const isOwner = currentUserId && currentUserId === m.reporterId;
-
-    const classLabel = m.classification ? CLASS_LABELS[m.classification] : '';
-    const classColor = m.classification ? CLASS_COLORS[m.classification] : '#757575';
-    const sizeLabel = m.size ? SIZE_LABELS[m.size] : '';
-
-    const templateBadges = [
-      sizeLabel ? `<span class="popup-badge">${sizeLabel}</span>` : '',
-      m.color ? `<span class="popup-badge">${m.color}</span>` : '',
-      m.earTagColor && m.earTagColor !== 'yok' ? `<span class="popup-badge">Küpe: ${m.earTagColor}</span>` : '',
-    ].filter(Boolean).join('');
-
-    const ownerActions = isOwner ? `
-      <div class="popup-actions">
-        <button class="btn-edit" onclick="window.mapView.openEditModal('${m.id}')">✏️ Düzenle</button>
-        <button class="btn-delete-marker" onclick="window.mapView.deleteMarker('${m.id}')">🗑️ Sil</button>
-      </div>` : '';
-
-    const voteButtons = token && !isOwner ? `
-      <div class="popup-actions">
-        <button class="btn-validate" onclick="window.mapView.vote('${m.id}','validate')">✅ Doğrula</button>
-        <button class="btn-dispute" onclick="window.mapView.vote('${m.id}','dispute')">⚠️ İtiraz</button>
-      </div>` : '';
-
-    return `
-      <div class="marker-popup">
-        <div class="popup-header" style="background:${classColor}">
-          <span class="popup-classification">${classLabel || 'Bilinmiyor'}</span>
-          <span class="popup-animal-count">🐾 ${m.animalCount} hayvan</span>
-        </div>
-        <div class="popup-body">
-          <div class="popup-badges">${templateBadges}</div>
-          <p class="popup-desc">${m.description || 'Açıklama yok'}</p>
-          <p class="popup-address">📍 ${m.address || `${m.lat.toFixed(4)}, ${m.lng.toFixed(4)}`}</p>
-          <p class="popup-meta">
-            <span>👤 ${m.reporterName}</span>
-            <span>📅 ${m.createdAt}</span>
-          </p>
-          <p class="popup-meta">
-            <span>✅ ${m.validationCount} doğrulama</span>
-            <span>⚠️ ${m.disputeCount} itiraz</span>
-          </p>
-        </div>
-        ${ownerActions}
-        ${voteButtons}
-      </div>`;
-  }
-
-  async vote(markerId: string, type: 'validate' | 'dispute'): Promise<void> {
-    const token = localStorage.getItem('token');
-    if (!token) { alert('Lütfen giriş yapın.'); return; }
+    if (!token) { this.showToast('Lütfen giriş yapın.', 'error'); return; }
 
     const res = await fetch(`${API}/api/validations/${markerId}/${type}`, {
       method: 'POST',
@@ -133,13 +110,70 @@ export class MapView {
       await this.loadMarkers();
       this.showToast(data.message, 'success');
     } else if (res.status === 401) {
-      localStorage.clear();
-      this.showToast('Oturumunuz sona erdi. Lütfen tekrar giriş yapın.', 'error');
-      setTimeout(() => { window.location.href = '/login'; }, 2000);
+      this.handleSessionExpired();
     } else {
       this.showToast(data.error, 'error');
     }
   }
+
+  /** Open the dispute modal for the given marker. */
+  openDisputeModal(markerId: string): void {
+    this.pendingDisputeMarkerId = markerId;
+    const modal = document.getElementById('dispute-modal') as HTMLElement;
+    if (modal) {
+      // Reset form
+      (document.getElementById('dispute-reason') as HTMLSelectElement).value = '';
+      (document.getElementById('dispute-explanation') as HTMLTextAreaElement).value = '';
+      modal.style.display = 'flex';
+    }
+  }
+
+  /** Called by mapPage when the dispute form is submitted. */
+  async submitDispute(): Promise<void> {
+    const markerId = this.pendingDisputeMarkerId;
+    if (!markerId) return;
+
+    const token = localStorage.getItem('token');
+    if (!token) { this.showToast('Lütfen giriş yapın.', 'error'); return; }
+
+    const reason = (document.getElementById('dispute-reason') as HTMLSelectElement).value;
+    if (!reason) {
+      this.showToast('Lütfen bir itiraz nedeni seçin.', 'error');
+      return;
+    }
+
+    const explanation = (document.getElementById('dispute-explanation') as HTMLTextAreaElement).value.trim();
+
+    const res = await fetch(`${API}/api/validations/${markerId}/dispute`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({ reason, explanation: explanation || undefined }),
+    });
+
+    const data = await res.json();
+
+    if (res.ok) {
+      this.closeDisputeModal();
+      await this.loadMarkers();
+      this.showToast(data.message, 'success');
+    } else if (res.status === 401) {
+      this.closeDisputeModal();
+      this.handleSessionExpired();
+    } else {
+      this.showToast(data.error || 'İtiraz gönderilemedi.', 'error');
+    }
+  }
+
+  closeDisputeModal(): void {
+    const modal = document.getElementById('dispute-modal') as HTMLElement;
+    if (modal) modal.style.display = 'none';
+    this.pendingDisputeMarkerId = null;
+  }
+
+  // ─── Add marker ─────────────────────────────────────────────────────────
 
   async addMarker(description: string, animalCount: number): Promise<void> {
     if (this.selectedLat === null || this.selectedLng === null) return;
@@ -156,37 +190,58 @@ export class MapView {
       return;
     }
 
+    // Client-side image validation
+    const imageInput = document.getElementById('marker-image') as HTMLInputElement;
+    const imageFile = imageInput?.files?.[0] ?? null;
+
+    if (imageFile) {
+      if (!ALLOWED_MIME_TYPES.has(imageFile.type)) {
+        this.showToast('Yalnızca JPEG veya PNG dosyası ekleyebilirsiniz.', 'error');
+        return;
+      }
+      if (imageFile.size > MAX_IMAGE_SIZE_BYTES) {
+        this.showToast('Fotoğraf boyutu 5 MB\'ı geçemez.', 'error');
+        return;
+      }
+    }
+
+    // Use FormData to support multipart (image + JSON fields)
+    const formData = new FormData();
+    formData.append('lat', String(this.selectedLat));
+    formData.append('lng', String(this.selectedLng));
+    formData.append('description', description);
+    formData.append('animalCount', String(animalCount));
+    formData.append('size', size);
+    formData.append('color', color);
+    formData.append('earTagColor', earTagColor);
+    formData.append('classification', classification);
+    formData.append('address', this.selectedAddress);
+    if (imageFile) formData.append('image', imageFile);
+
     const res = await fetch(`${API}/api/markers`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-      body: JSON.stringify({
-        lat: this.selectedLat,
-        lng: this.selectedLng,
-        description,
-        animalCount,
-        size,
-        color,
-        earTagColor,
-        classification,
-        address: this.selectedAddress,
-      }),
+      headers: { Authorization: `Bearer ${token}` },
+      body: formData,
     });
 
     if (res.ok) {
+      const data = await res.json();
       this.closeModal();
       await this.loadMarkers();
-      this.showToast('Marker eklendi! +10 puan kazandınız 🎉', 'success');
+      let msg = 'Marker eklendi! +10 puan kazandınız 🎉';
+      if (data.imageWarning) msg += ` (Fotoğraf: ${data.imageWarning})`;
+      this.showToast(msg, 'success');
     } else {
       const data = await res.json();
       if (res.status === 401) {
-        localStorage.clear();
-        this.showToast('Oturumunuz sona erdi. Lütfen tekrar giriş yapın.', 'error');
-        setTimeout(() => { window.location.href = '/login'; }, 2000);
+        this.handleSessionExpired();
       } else {
         this.showToast(data.error || 'Hata oluştu.', 'error');
       }
     }
   }
+
+  // ─── Edit marker ─────────────────────────────────────────────────────────
 
   openEditModal(markerId: string): void {
     const m = this.markers.find(x => x.id === markerId);
@@ -250,21 +305,31 @@ export class MapView {
     }
   }
 
-  toggleHeatmap(): boolean {
-    return this.facade.toggleHeatmap();
-  }
+  // ─── Modal helpers ───────────────────────────────────────────────────────
 
   closeModal(): void {
     (document.getElementById('add-marker-modal') as HTMLElement).style.display = 'none';
     this.selectedLat = null;
     this.selectedLng = null;
     this.selectedAddress = '';
+    const imageInput = document.getElementById('marker-image') as HTMLInputElement;
+    if (imageInput) imageInput.value = '';
+    const preview = document.getElementById('image-preview') as HTMLElement;
+    if (preview) { preview.style.display = 'none'; (preview as HTMLImageElement).src = ''; }
   }
+
+  // ─── Toast & session ────────────────────────────────────────────────────
 
   showToast(msg: string, type: 'success' | 'error'): void {
     const toast = document.getElementById('toast')!;
     toast.textContent = msg;
     toast.className = `toast ${type} show`;
-    setTimeout(() => toast.classList.remove('show'), 3000);
+    setTimeout(() => toast.classList.remove('show'), 3500);
+  }
+
+  private handleSessionExpired(): void {
+    localStorage.clear();
+    this.showToast('Oturumunuz sona erdi. Lütfen tekrar giriş yapın.', 'error');
+    setTimeout(() => { window.location.href = '/login'; }, 2000);
   }
 }

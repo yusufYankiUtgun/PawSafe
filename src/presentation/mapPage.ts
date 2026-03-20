@@ -42,7 +42,6 @@ async function init() {
     if (userInfo) { userInfo.style.display = 'flex'; userInfo.textContent = `👤 ${username}`; }
     if (logoutBtn) logoutBtn.style.display = 'flex';
   } else if (token && !sessionValid) {
-    // Token was in storage but is now invalid — show a hint
     const hint = document.getElementById('map-hint');
     if (hint) hint.textContent = '⚠️ Oturumunuz sona erdi. Tekrar giriş yapın.';
   }
@@ -69,7 +68,7 @@ async function init() {
     });
   }
 
-  // Add marker form — confirm step
+  // ── Add marker form ──────────────────────────────────────────────────────
   document.getElementById('add-marker-form')?.addEventListener('submit', (e) => {
     e.preventDefault();
     const size = (document.getElementById('marker-size') as HTMLSelectElement).value;
@@ -82,9 +81,7 @@ async function init() {
       return;
     }
 
-    // Show confirm step
-    const confirmModal = document.getElementById('confirm-modal') as HTMLElement;
-    confirmModal.style.display = 'flex';
+    (document.getElementById('confirm-modal') as HTMLElement).style.display = 'flex';
   });
 
   document.getElementById('confirm-yes')?.addEventListener('click', async () => {
@@ -100,7 +97,24 @@ async function init() {
 
   document.getElementById('modal-close')?.addEventListener('click', () => mapView.closeModal());
 
-  // Edit modal
+  // Image preview
+  document.getElementById('marker-image')?.addEventListener('change', (e) => {
+    const file = (e.target as HTMLInputElement).files?.[0];
+    const preview = document.getElementById('image-preview') as HTMLImageElement;
+    if (file && preview) {
+      const reader = new FileReader();
+      reader.onload = ev => {
+        preview.src = ev.target?.result as string;
+        preview.style.display = 'block';
+      };
+      reader.readAsDataURL(file);
+    } else if (preview) {
+      preview.style.display = 'none';
+      preview.src = '';
+    }
+  });
+
+  // ── Edit modal ───────────────────────────────────────────────────────────
   document.getElementById('edit-marker-form')?.addEventListener('submit', async (e) => {
     e.preventDefault();
     await mapView.submitEdit();
@@ -109,7 +123,19 @@ async function init() {
     (document.getElementById('edit-marker-modal') as HTMLElement).style.display = 'none';
   });
 
-  // Close notif dropdown on outside click
+  // ── Dispute modal ────────────────────────────────────────────────────────
+  document.getElementById('dispute-form')?.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    await mapView.submitDispute();
+  });
+  document.getElementById('dispute-modal-close')?.addEventListener('click', () => {
+    mapView.closeDisputeModal();
+  });
+  document.getElementById('dispute-cancel')?.addEventListener('click', () => {
+    mapView.closeDisputeModal();
+  });
+
+  // ── Close notif dropdown on outside click ────────────────────────────────
   document.addEventListener('click', (e) => {
     const dropdown = document.getElementById('notif-dropdown');
     const btn = document.getElementById('notif-btn');

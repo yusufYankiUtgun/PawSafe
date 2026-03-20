@@ -1,21 +1,42 @@
 import { Router, Request, Response } from 'express';
+import multer from 'multer';
 import { MarkerService } from '../business/MarkerService';
 import { AuthService } from '../business/AuthService';
+import { ImageUploadService } from '../business/ImageUploadService';
 
-export function createMarkersRouter(markerService: MarkerService, authService: AuthService): Router {
+/**
+ * Multer is configured to use memory storage so ImageUploadService
+ * can perform its own validation before writing to disk.
+ * Max 6 MB at the multer level (the service enforces the 5 MB business rule).
+ */
+const upload = multer({
+  storage: multer.memoryStorage(),
+  limits: { fileSize: 6 * 1024 * 1024 },
+});
+
+export function createMarkersRouter(
+  markerService: MarkerService,
+  authService: AuthService,
+  imageUploadService?: ImageUploadService,
+): Router {
   const router = Router();
 
   router.get('/', (_req: Request, res: Response) => {
-    res.json(markerService.getAll());
+    const markers = markerService.getAll().map(m => ({
+      ...m,
+      imageUrl: imageUploadService?.getForMarker(m.id) || m.imageUrl || '',
+    }));
+    res.json(markers);
   });
 
   router.get('/:id', (req: Request, res: Response) => {
     const marker = markerService.getById(req.params.id);
     if (!marker) return res.status(404).json({ error: 'Marker bulunamadı.' });
-    res.json(marker);
+    const imageUrl = imageUploadService?.getForMarker(marker.id) || marker.imageUrl || '';
+    res.json({ ...marker, imageUrl });
   });
 
-  router.post('/', (req: Request, res: Response) => {
+  router.post('/', upload.single('image'), (req: Request, res: Response) => {
     const token = req.headers.authorization?.replace('Bearer ', '');
     if (!token) return res.status(401).json({ error: 'Yetkilendirme gerekli.' });
 
@@ -23,6 +44,7 @@ export function createMarkersRouter(markerService: MarkerService, authService: A
     if (!user) return res.status(401).json({ error: 'Geçersiz token.' });
 
     const { lat, lng, description, animalCount, size, color, earTagColor, classification, address } = req.body;
+
     if (lat === undefined || lng === undefined) {
       return res.status(400).json({ error: 'Konum bilgisi gerekli.' });
     }
@@ -31,10 +53,26 @@ export function createMarkersRouter(markerService: MarkerService, authService: A
     }
 
     const marker = markerService.createMarker(
-      lat, lng, '', user.id, user.username,
-      description || '', animalCount || 1,
+      parseFloat(lat), parseFloat(lng), '', user.id, user.username,
+      description || '', parseInt(animalCount) || 1,
       size, color, earTagColor, classification, address || ''
     );
+
+    // Handle optional image upload
+    if (req.file && imageUploadService) {
+      const result = imageUploadService.processUpload(
+        marker.id,
+        req.file.mimetype,
+        req.file.size,
+        req.file.buffer,
+      );
+      if (!result.success) {
+        // Marker is already saved; image error is non-fatal — return warning
+        return res.status(201).json({ ...marker, imageUrl: '', imageWarning: result.error });
+      }
+      marker.imageUrl = result.url!;
+    }
+
     res.status(201).json(marker);
   });
 

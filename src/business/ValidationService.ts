@@ -1,6 +1,6 @@
 import { ISubject } from '../interfaces/ISubject';
 import { IObserver } from '../interfaces/IObserver';
-import { ValidationEvent } from '../interfaces/types';
+import { ValidationEvent, DisputeReason } from '../interfaces/types';
 import { ValidationRepository } from '../data/ValidationRepository';
 import { MarkerRepository } from '../data/MarkerRepository';
 
@@ -45,7 +45,20 @@ export class ValidationService implements ISubject {
     return { success: true, message: 'Doğrulama başarılı.' };
   }
 
-  dispute(markerId: string, userId: string): { success: boolean; message: string } {
+  /**
+   * Record a dispute against a marker.
+   *
+   * @param markerId     – the marker being disputed
+   * @param userId       – the user disputing
+   * @param reason       – mandatory dispute reason category
+   * @param explanation  – optional free-text explanation
+   */
+  dispute(
+    markerId: string,
+    userId: string,
+    reason: DisputeReason,
+    explanation?: string,
+  ): { success: boolean; message: string } {
     if (this.validationRepo.hasVoted(markerId, userId)) {
       return { success: false, message: 'Zaten oy kullandınız.' };
     }
@@ -53,7 +66,7 @@ export class ValidationService implements ISubject {
     const marker = this.markerRepo.getById(markerId);
     if (!marker) return { success: false, message: 'Marker bulunamadı.' };
 
-    this.validationRepo.save({ markerId, userId, type: 'dispute' });
+    this.validationRepo.save({ markerId, userId, type: 'dispute', reason, explanation });
     this.markerRepo.incrementDispute(markerId);
 
     this.notify({
@@ -61,6 +74,8 @@ export class ValidationService implements ISubject {
       reporterId: marker.reporterId,
       validatorId: userId,
       validationType: 'dispute',
+      reason,
+      explanation,
     });
 
     return { success: true, message: 'İtiraz kaydedildi.' };
