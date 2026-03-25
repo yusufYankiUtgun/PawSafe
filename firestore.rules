@@ -1,0 +1,60 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ── Helper functions ──────────────────────────────────────────────────────
+
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    function isOwner(uid) {
+      return isAuthenticated() && request.auth.uid == uid;
+    }
+
+    function isAdmin() {
+      return isAuthenticated() &&
+        exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == "admin";
+    }
+
+    // ── Reports collection ────────────────────────────────────────────────────
+    match /reports/{reportId} {
+      // Any authenticated user can read active (non-deleted) reports.
+      allow read: if isAuthenticated();
+
+      // Authenticated users can create a report for themselves only.
+      allow create: if isAuthenticated()
+        && request.resource.data.uid == request.auth.uid
+        && request.resource.data.deleted == false
+        && request.resource.data.keys().hasAll(['uid', 'location', 'timestamp', 'deleted', 'district']);
+
+      // Users can only update their own reports (e.g., description edit).
+      // Admins can update any report (soft-delete).
+      allow update: if isOwner(resource.data.uid) || isAdmin();
+
+      // Hard deletes are never allowed from the client.
+      allow delete: if false;
+    }
+
+    // ── Users collection ──────────────────────────────────────────────────────
+    match /users/{uid} {
+      // Users can read and write their own document.
+      allow read: if isOwner(uid) || isAdmin();
+      allow create: if isOwner(uid);
+      // Users can update their own profile but cannot change their role.
+      allow update: if isOwner(uid)
+        && (!request.resource.data.diff(resource.data).affectedKeys().hasAny(['role']))
+        || isAdmin();
+      allow delete: if false;
+    }
+
+    // ── Audit log ─────────────────────────────────────────────────────────────
+    match /audit_log/{logId} {
+      // Only admins (or Cloud Functions) can read the audit log.
+      allow read: if isAdmin();
+      // Client cannot write audit logs directly — Cloud Functions do this.
+      allow write: if false;
+    }
+  }
+}

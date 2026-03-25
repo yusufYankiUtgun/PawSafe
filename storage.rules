@@ -1,0 +1,21 @@
+rules_version = '2';
+service firebase.storage {
+  match /b/{bucket}/o {
+
+    // ── Report photos ─────────────────────────────────────────────────────────
+    // Path: report_photos/{uid}/{filename}
+    match /report_photos/{uid}/{filename} {
+      // Any authenticated user can read report photos (needed for map detail view).
+      allow read: if request.auth != null;
+
+      // Users can upload photos only to their own path.
+      allow write: if request.auth != null
+        && request.auth.uid == uid
+        && request.resource.size <= 5 * 1024 * 1024    // max 5 MB
+        && request.resource.contentType.matches('image/.*');
+
+      // Users cannot delete photos directly (admin-managed via console).
+      allow delete: if false;
+    }
+  }
+}

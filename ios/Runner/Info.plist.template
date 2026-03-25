@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  IMPORTANT: This is a configuration template showing the entries that must be
+  present in ios/Runner/Info.plist. After running `flutter create .`, merge
+  these keys into the generated ios/Runner/Info.plist.
+-->
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <!-- ── Google Maps iOS SDK ───────────────────────────────────────────────
+         Replace YOUR_IOS_MAPS_API_KEY with your actual key.
+         Enable: Maps SDK for iOS in Google Cloud Console.
+    ────────────────────────────────────────────────────────────────────────── -->
+    <key>io.flutter.embedded_views_preview</key>
+    <true/>
+
+    <!-- Location permission prompts (required for geolocator) -->
+    <key>NSLocationWhenInUseUsageDescription</key>
+    <string>PawSafe needs your location to place stray dog reports on the map near you.</string>
+
+    <key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
+    <string>PawSafe uses your location to notify you about stray dog reports in your area.</string>
+
+    <!-- Camera & photo library (required for image_picker) -->
+    <key>NSCameraUsageDescription</key>
+    <string>Take a photo of the stray dog to attach to your report.</string>
+
+    <key>NSPhotoLibraryUsageDescription</key>
+    <string>Choose a photo from your library to attach to your report.</string>
+
+    <!-- Push notification background mode -->
+    <key>UIBackgroundModes</key>
+    <array>
+        <string>fetch</string>
+        <string>remote-notification</string>
+    </array>
+</dict>
+</plist>
+
+<!--
+  Additionally, add the Google Maps API key in ios/Runner/AppDelegate.swift:
+
+  import GoogleMaps
+
+  @UIApplicationMain
+  @objc class AppDelegate: FlutterAppDelegate {
+    override func application(
+      _ application: UIApplication,
+      didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?
+    ) -> Bool {
+      GMSServices.provideAPIKey("YOUR_IOS_MAPS_API_KEY")
+      GeneratedPluginRegistrant.register(with: self)
+      return super.application(application, didFinishLaunchingWithOptions: launchOptions)
+    }
+  }
+-->

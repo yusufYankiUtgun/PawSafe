@@ -1,0 +1,17 @@
+// NOTE: This is a minimal reference template for google-services integration.
+// After running `flutter create .`, merge these settings into your generated build.gradle.
+
+android {
+    compileSdkVersion 34
+    defaultConfig {
+        applicationId "com.pawsafe.app"
+        minSdkVersion 21          // Required by Firebase + geolocator
+        targetSdkVersion 34
+        versionCode 1
+        versionName "1.0.0"
+        multiDexEnabled true
+    }
+}
+
+// Required for Firebase:
+apply plugin: 'com.google.gms.google-services'
