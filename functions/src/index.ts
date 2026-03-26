@@ -218,7 +218,7 @@ export const onReportCreated = functions.firestore
       const response = await admin.messaging().sendEachForMulticast(message);
       functions.logger.info(
         `Notifications sent: ${response.successCount} success, ` +
-          `${response.failureCount} failure.`
+        `${response.failureCount} failure.`
       );
     } catch (err) {
       functions.logger.error("FCM send error:", err);
