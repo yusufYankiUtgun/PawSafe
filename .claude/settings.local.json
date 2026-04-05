@@ -1,0 +1,9 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(cmd.exe /c \"cd /d \\\\\"c:\\\\Users\\\\utgun\\\\OneDrive\\\\Masaüstü\\\\PawSafe\\\\\" && npm test -- --forceExit 2>&1\")",
+      "Bash(cmd.exe /c \"cd /d \\\\\"c:\\\\\\\\Users\\\\\\\\utgun\\\\\\\\OneDrive\\\\\\\\Masaüstü\\\\\\\\PawSafe\\\\\" && npx jest --forceExit 2>&1\")",
+      "Bash(powershell.exe -Command \"Set-Location 'c:\\\\\\\\Users\\\\\\\\utgun\\\\\\\\OneDrive\\\\\\\\Masaüstü\\\\\\\\PawSafe'; npx jest --forceExit 2>&1\")"
+    ]
+  }
+}
