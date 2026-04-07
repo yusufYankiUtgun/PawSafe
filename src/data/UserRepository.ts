@@ -2,7 +2,7 @@ import { User } from '../interfaces/types';
 import { mockUsers } from './mockData';
 
 export class UserRepository {
-  private users: User[] = [...mockUsers];
+  private users: User[] = mockUsers.map(u => ({ ...u }));
 
   getAll(): User[] {
     return [...this.users];
