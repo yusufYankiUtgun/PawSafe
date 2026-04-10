@@ -57,12 +57,12 @@ export class ImageUploadService {
    * @param buffer     – raw file contents
    * @returns { success, url } on success, { success: false, error } on failure
    */
-  processUpload(
+  async processUpload(
     markerId: string,
     mimeType: string,
     sizeBytes: number,
     buffer: Buffer,
-  ): { success: boolean; url?: string; error?: string } {
+  ): Promise<{ success: boolean; url?: string; error?: string }> {
     const validation = this.validate(mimeType, sizeBytes);
     if (!validation.valid) {
       return { success: false, error: validation.error };
@@ -82,12 +82,12 @@ export class ImageUploadService {
     }
 
     const url = `/uploads/${safeFilename}`;
-    this.storage.saveImage(markerId, safeFilename, url);
+    await this.storage.saveImage(markerId, safeFilename, url);
     return { success: true, url };
   }
 
   /** Return the stored image URL for a marker, or undefined if none. */
-  getForMarker(markerId: string): string | undefined {
+  async getForMarker(markerId: string): Promise<string | undefined> {
     return this.storage.getUrl(markerId);
   }
 }

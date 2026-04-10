@@ -21,26 +21,27 @@ export function createMarkersRouter(
 ): Router {
   const router = Router();
 
-  router.get('/', (_req: Request, res: Response) => {
-    const markers = markerService.getAll().map(m => ({
+  router.get('/', async (_req: Request, res: Response) => {
+    const markers = await markerService.getAll();
+    const enriched = await Promise.all(markers.map(async m => ({
       ...m,
-      imageUrl: imageUploadService?.getForMarker(m.id) || m.imageUrl || '',
-    }));
-    res.json(markers);
+      imageUrl: (await imageUploadService?.getForMarker(m.id)) || m.imageUrl || '',
+    })));
+    res.json(enriched);
   });
 
-  router.get('/:id', (req: Request, res: Response) => {
-    const marker = markerService.getById(req.params.id);
+  router.get('/:id', async (req: Request, res: Response) => {
+    const marker = await markerService.getById(req.params.id);
     if (!marker) return res.status(404).json({ error: 'Marker bulunamadı.' });
-    const imageUrl = imageUploadService?.getForMarker(marker.id) || marker.imageUrl || '';
+    const imageUrl = (await imageUploadService?.getForMarker(marker.id)) || marker.imageUrl || '';
     res.json({ ...marker, imageUrl });
   });
 
-  router.post('/', upload.single('image'), (req: Request, res: Response) => {
+  router.post('/', upload.single('image'), async (req: Request, res: Response) => {
     const token = req.headers.authorization?.replace('Bearer ', '');
     if (!token) return res.status(401).json({ error: 'Yetkilendirme gerekli.' });
 
-    const user = authService.getUserFromToken(token);
+    const user = await authService.getUserFromToken(token);
     if (!user) return res.status(401).json({ error: 'Geçersiz token.' });
 
     const { lat, lng, description, animalCount, size, color, earTagColor, classification, address } = req.body;
@@ -52,7 +53,7 @@ export function createMarkersRouter(
       return res.status(400).json({ error: 'Lütfen köpek özelliklerini seçin.' });
     }
 
-    const marker = markerService.createMarker(
+    const marker = await markerService.createMarker(
       parseFloat(lat), parseFloat(lng), '', user.id, user.username,
       description || '', parseInt(animalCount) || 1,
       size, color, earTagColor, classification, address || ''
@@ -60,7 +61,7 @@ export function createMarkersRouter(
 
     // Handle optional image upload
     if (req.file && imageUploadService) {
-      const result = imageUploadService.processUpload(
+      const result = await imageUploadService.processUpload(
         marker.id,
         req.file.mimetype,
         req.file.size,
@@ -76,38 +77,38 @@ export function createMarkersRouter(
     res.status(201).json(marker);
   });
 
-  router.put('/:id', (req: Request, res: Response) => {
+  router.put('/:id', async (req: Request, res: Response) => {
     const token = req.headers.authorization?.replace('Bearer ', '');
     if (!token) return res.status(401).json({ error: 'Yetkilendirme gerekli.' });
 
-    const user = authService.getUserFromToken(token);
+    const user = await authService.getUserFromToken(token);
     if (!user) return res.status(401).json({ error: 'Geçersiz token.' });
 
-    const marker = markerService.getById(req.params.id);
+    const marker = await markerService.getById(req.params.id);
     if (!marker) return res.status(404).json({ error: 'Marker bulunamadı.' });
     if (marker.reporterId !== user.id && user.role !== 'admin') {
       return res.status(403).json({ error: 'Bu marker size ait değil.' });
     }
 
     const { description, animalCount, size, color, earTagColor, classification } = req.body;
-    const updated = markerService.update(req.params.id, { description, animalCount, size, color, earTagColor, classification });
+    const updated = await markerService.update(req.params.id, { description, animalCount, size, color, earTagColor, classification });
     res.json(updated);
   });
 
-  router.delete('/:id', (req: Request, res: Response) => {
+  router.delete('/:id', async (req: Request, res: Response) => {
     const token = req.headers.authorization?.replace('Bearer ', '');
     if (!token) return res.status(401).json({ error: 'Yetkilendirme gerekli.' });
 
-    const user = authService.getUserFromToken(token);
+    const user = await authService.getUserFromToken(token);
     if (!user) return res.status(401).json({ error: 'Geçersiz token.' });
 
-    const marker = markerService.getById(req.params.id);
+    const marker = await markerService.getById(req.params.id);
     if (!marker) return res.status(404).json({ error: 'Marker bulunamadı.' });
     if (marker.reporterId !== user.id && user.role !== 'admin') {
       return res.status(403).json({ error: 'Bu marker size ait değil.' });
     }
 
-    markerService.delete(req.params.id);
+    await markerService.delete(req.params.id);
     res.json({ success: true });
   });
 

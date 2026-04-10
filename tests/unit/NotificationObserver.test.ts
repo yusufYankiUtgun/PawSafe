@@ -7,13 +7,13 @@ import { NotificationObserver } from '../../src/business/NotificationObserver';
 import { ValidationEvent } from '../../src/interfaces/types';
 
 describe('NotificationObserver', () => {
-  it('creates a success notification on validate event', () => {
+  it('creates a success notification on validate event', async () => {
     const obs = new NotificationObserver();
     const event: ValidationEvent = {
       markerId: 'm1', reporterId: 'u1',
       validatorId: 'u2', validationType: 'validate',
     };
-    obs.update(event);
+    await obs.update(event);
 
     const notes = obs.getForUser('u1');
     const latest = notes[notes.length - 1];
@@ -21,14 +21,14 @@ describe('NotificationObserver', () => {
     expect(latest.read).toBe(false);
   });
 
-  it('creates an error notification on dispute event with reason label', () => {
+  it('creates an error notification on dispute event with reason label', async () => {
     const obs = new NotificationObserver();
     const event: ValidationEvent = {
       markerId: 'm1', reporterId: 'u1',
       validatorId: 'u3', validationType: 'dispute',
       reason: 'false_report', explanation: 'wrong animal',
     };
-    obs.update(event);
+    await obs.update(event);
 
     const notes = obs.getForUser('u1');
     const latest = notes[notes.length - 1];
@@ -36,13 +36,13 @@ describe('NotificationObserver', () => {
     expect(latest.message).toMatch(/yanlış ihbar/i);
   });
 
-  it('markRead sets read=true', () => {
+  it('markRead sets read=true', async () => {
     const obs = new NotificationObserver();
     const event: ValidationEvent = {
       markerId: 'm1', reporterId: 'u1',
       validatorId: 'u4', validationType: 'validate',
     };
-    obs.update(event);
+    await obs.update(event);
     const notes = obs.getForUser('u1');
     const latest = notes[notes.length - 1];
 

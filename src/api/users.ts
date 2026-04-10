@@ -10,39 +10,39 @@ export function createUsersRouter(
 ): Router {
   const router = Router();
 
-  router.post('/register', (req: Request, res: Response) => {
+  router.post('/register', async (req: Request, res: Response) => {
     const { email, username, password } = req.body;
     if (!email || !username || !password) {
       return res.status(400).json({ error: 'Tüm alanlar gerekli.' });
     }
-    const result = authService.register(email, username, password);
+    const result = await authService.register(email, username, password);
     if (!result) return res.status(409).json({ error: 'Bu e-posta zaten kayıtlı.' });
     res.status(201).json(result);
   });
 
-  router.post('/login', (req: Request, res: Response) => {
+  router.post('/login', async (req: Request, res: Response) => {
     const { email, password } = req.body;
     if (!email || !password) {
       return res.status(400).json({ error: 'E-posta ve şifre gerekli.' });
     }
-    const result = authService.login(email, password);
+    const result = await authService.login(email, password);
     if (!result) return res.status(401).json({ error: 'Geçersiz e-posta veya şifre.' });
     res.json(result);
   });
 
-  router.get('/me', (req: Request, res: Response) => {
+  router.get('/me', async (req: Request, res: Response) => {
     const token = req.headers.authorization?.replace('Bearer ', '');
     if (!token) return res.status(401).json({ error: 'Yetkilendirme gerekli.' });
-    const user = authService.getUserFromToken(token);
+    const user = await authService.getUserFromToken(token);
     if (!user) return res.status(401).json({ error: 'Geçersiz token.' });
     const { password: _, ...safeUser } = user;
     res.json(safeUser);
   });
 
-  router.get('/notifications', (req: Request, res: Response) => {
+  router.get('/notifications', async (req: Request, res: Response) => {
     const token = req.headers.authorization?.replace('Bearer ', '');
     if (!token) return res.status(401).json({ error: 'Yetkilendirme gerekli.' });
-    const user = authService.getUserFromToken(token);
+    const user = await authService.getUserFromToken(token);
     if (!user) return res.status(401).json({ error: 'Geçersiz token.' });
     res.json(notificationObserver.getForUser(user.id));
   });
@@ -53,12 +53,12 @@ export function createUsersRouter(
   });
 
   // Profile: current user's markers
-  router.get('/my-markers', (req: Request, res: Response) => {
+  router.get('/my-markers', async (req: Request, res: Response) => {
     const token = req.headers.authorization?.replace('Bearer ', '');
     if (!token) return res.status(401).json({ error: 'Yetkilendirme gerekli.' });
-    const user = authService.getUserFromToken(token);
+    const user = await authService.getUserFromToken(token);
     if (!user) return res.status(401).json({ error: 'Geçersiz token.' });
-    const all = markerService?.getAll() ?? [];
+    const all = markerService ? await markerService.getAll() : [];
     res.json(all.filter(m => m.reporterId === user.id));
   });
 

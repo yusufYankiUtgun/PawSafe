@@ -12,18 +12,18 @@ import * as fs from 'fs';
 import * as path from 'path';
 import * as os from 'os';
 import { ImageUploadService } from '../../src/business/ImageUploadService';
-import { IImageStorage } from '../../src/interfaces/IImageStorage';
+import { IImageStorage, StoredImage } from '../../src/interfaces/IImageStorage';
 
 // ─── In-memory mock storage ───────────────────────────────────────────────────
 
 class MockStorage implements IImageStorage {
   private store: Map<string, { filename: string; url: string; uploadedAt: string }> = new Map();
 
-  saveImage(markerId: string, filename: string, url: string) {
+  async saveImage(markerId: string, filename: string, url: string): Promise<void> {
     this.store.set(markerId, { filename, url, uploadedAt: new Date().toISOString() });
   }
-  getUrl(markerId: string) { return this.store.get(markerId)?.url; }
-  getImage(markerId: string) {
+  async getUrl(markerId: string): Promise<string | undefined> { return this.store.get(markerId)?.url; }
+  async getImage(markerId: string): Promise<StoredImage | undefined> {
     const e = this.store.get(markerId);
     return e ? { markerId, ...e } : undefined;
   }
@@ -81,14 +81,14 @@ describe('ImageUploadService – processUpload()', () => {
     jest.restoreAllMocks();
   });
 
-  it('saves a JPEG to disk and returns a /uploads/ URL', () => {
+  it('saves a JPEG to disk and returns a /uploads/ URL', async () => {
     const { svc, storage, tmpDir } = makeSvc();
 
-    const result = svc.processUpload('m1', 'image/jpeg', JPEG_MAGIC.length, JPEG_MAGIC);
+    const result = await svc.processUpload('m1', 'image/jpeg', JPEG_MAGIC.length, JPEG_MAGIC);
 
     expect(result.success).toBe(true);
     expect(result.url).toMatch(/^\/uploads\/m1_\d+\.jpg$/);
-    expect(storage.getUrl('m1')).toBe(result.url);
+    expect(await storage.getUrl('m1')).toBe(result.url);
 
     const filename = result.url!.replace('/uploads/', '');
     expect(fs.existsSync(path.join(tmpDir, filename))).toBe(true);
@@ -96,10 +96,10 @@ describe('ImageUploadService – processUpload()', () => {
     fs.unlinkSync(path.join(tmpDir, filename));
   });
 
-  it('saves a PNG and uses .png extension', () => {
+  it('saves a PNG and uses .png extension', async () => {
     const { svc, tmpDir } = makeSvc();
 
-    const result = svc.processUpload('m2', 'image/png', PNG_MAGIC.length, PNG_MAGIC);
+    const result = await svc.processUpload('m2', 'image/png', PNG_MAGIC.length, PNG_MAGIC);
 
     expect(result.success).toBe(true);
     expect(result.url).toMatch(/\.png$/);
@@ -108,31 +108,31 @@ describe('ImageUploadService – processUpload()', () => {
     fs.unlinkSync(path.join(tmpDir, filename));
   });
 
-  it('returns failure for an invalid MIME type and does NOT write a file', () => {
+  it('returns failure for an invalid MIME type and does NOT write a file', async () => {
     const { svc, tmpDir } = makeSvc();
     const before = fs.readdirSync(tmpDir).length;
 
-    const result = svc.processUpload('m3', 'image/gif', 100, Buffer.alloc(100));
+    const result = await svc.processUpload('m3', 'image/gif', 100, Buffer.alloc(100));
 
     expect(result.success).toBe(false);
     expect(result.error).toBeDefined();
     expect(fs.readdirSync(tmpDir).length).toBe(before);
   });
 
-  it('returns failure for an oversized file', () => {
+  it('returns failure for an oversized file', async () => {
     const { svc } = makeSvc();
     const bigBuffer = Buffer.alloc(6 * 1024 * 1024);
 
-    const result = svc.processUpload('m4', 'image/jpeg', bigBuffer.length, bigBuffer);
+    const result = await svc.processUpload('m4', 'image/jpeg', bigBuffer.length, bigBuffer);
 
     expect(result.success).toBe(false);
   });
 
-  it('returns the previously stored URL via getForMarker()', () => {
+  it('returns the previously stored URL via getForMarker()', async () => {
     const { svc, tmpDir } = makeSvc();
 
-    svc.processUpload('m5', 'image/jpeg', JPEG_MAGIC.length, JPEG_MAGIC);
-    const url = svc.getForMarker('m5');
+    await svc.processUpload('m5', 'image/jpeg', JPEG_MAGIC.length, JPEG_MAGIC);
+    const url = await svc.getForMarker('m5');
 
     expect(url).toMatch(/^\/uploads\/m5_/);
 

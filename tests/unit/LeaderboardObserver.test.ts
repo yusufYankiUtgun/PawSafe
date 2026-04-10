@@ -20,46 +20,46 @@ function makeEvent(type: 'validate' | 'dispute' = 'validate'): ValidationEvent {
 }
 
 describe('LeaderboardObserver – update()', () => {
-  it('updates lastUpdate to a value >= the timestamp before the call', () => {
+  it('updates lastUpdate to a value >= the timestamp before the call', async () => {
     const { obs } = makeObs();
     const before = obs.getLastUpdate();
 
-    obs.update(makeEvent());
+    await obs.update(makeEvent());
 
     expect(obs.getLastUpdate()).toBeGreaterThanOrEqual(before);
   });
 
-  it('updates lastUpdate on dispute events too', () => {
+  it('updates lastUpdate on dispute events too', async () => {
     const { obs } = makeObs();
     const before = obs.getLastUpdate();
 
-    obs.update(makeEvent('dispute'));
+    await obs.update(makeEvent('dispute'));
 
     expect(obs.getLastUpdate()).toBeGreaterThanOrEqual(before);
   });
 });
 
 describe('LeaderboardObserver – rerank()', () => {
-  it('returns an array sorted by trustScore descending', () => {
+  it('returns an array sorted by trustScore descending', async () => {
     const { obs } = makeObs();
-    const board = obs.rerank();
+    const board = await obs.rerank();
 
     for (let i = 1; i < board.length; i++) {
       expect(board[i - 1].trustScore).toBeGreaterThanOrEqual(board[i].trustScore);
     }
   });
 
-  it('excludes admin users from the leaderboard', () => {
+  it('excludes admin users from the leaderboard', async () => {
     const { obs } = makeObs();
-    const board = obs.rerank();
+    const board = await obs.rerank();
 
     const hasAdmin = board.some(entry => entry.role === 'admin');
     expect(hasAdmin).toBe(false);
   });
 
-  it('each entry has userId, username, trustScore, and role fields', () => {
+  it('each entry has userId, username, trustScore, and role fields', async () => {
     const { obs } = makeObs();
-    const entry = obs.rerank()[0];
+    const entry = (await obs.rerank())[0];
 
     expect(entry).toHaveProperty('userId');
     expect(entry).toHaveProperty('username');
@@ -67,20 +67,20 @@ describe('LeaderboardObserver – rerank()', () => {
     expect(entry).toHaveProperty('role');
   });
 
-  it('top entry has the highest trustScore (mehmet_can with 24)', () => {
+  it('top entry has the highest trustScore (mehmet_can with 24)', async () => {
     const { obs } = makeObs();
-    const top = obs.rerank()[0];
+    const top = (await obs.rerank())[0];
 
     expect(top.username).toBe('mehmet_can');
     expect(top.trustScore).toBe(24);
   });
 
-  it('reflects trust score changes after a TrustScoreObserver increments it', () => {
+  it('reflects trust score changes after a TrustScoreObserver increments it', async () => {
     const { obs, userRepo } = makeObs();
     // Give u6 (zeynep_ak, score 5) a large boost so she tops the board
-    userRepo.addTrustScore('u6', 100);
+    await userRepo.addTrustScore('u6', 100);
 
-    const top = obs.rerank()[0];
+    const top = (await obs.rerank())[0];
     expect(top.username).toBe('zeynep_ak');
   });
 });

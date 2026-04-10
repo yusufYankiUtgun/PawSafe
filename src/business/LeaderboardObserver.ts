@@ -7,16 +7,16 @@ export class LeaderboardObserver implements IObserver {
 
   constructor(private userRepo: UserRepository) {}
 
-  update(event: ValidationEvent): void {
+  async update(_event: ValidationEvent): Promise<void> {
     this.lastUpdate = Date.now();
   }
 
-  rerank(): { userId: string; username: string; trustScore: number; role: string }[] {
-    return this.userRepo.getLeaderboard().map(u => ({
-      userId: u.id,
-      username: u.username,
+  async rerank(): Promise<{ userId: string; username: string; trustScore: number; role: string }[]> {
+    return (await this.userRepo.getLeaderboard()).map(u => ({
+      userId:     u.id,
+      username:   u.username,
       trustScore: u.trustScore,
-      role: u.role,
+      role:       u.role,
     }));
   }
 

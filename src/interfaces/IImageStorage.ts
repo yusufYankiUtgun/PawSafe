@@ -10,7 +10,7 @@ export interface StoredImage {
  * not on a concrete repository class).
  */
 export interface IImageStorage {
-  saveImage(markerId: string, filename: string, url: string): void;
-  getUrl(markerId: string): string | undefined;
-  getImage(markerId: string): StoredImage | undefined;
+  saveImage(markerId: string, filename: string, url: string): Promise<void>;
+  getUrl(markerId: string): Promise<string | undefined>;
+  getImage(markerId: string): Promise<StoredImage | undefined>;
 }

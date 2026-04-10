@@ -5,9 +5,9 @@ import { UserRepository } from '../data/UserRepository';
 export class TrustScoreObserver implements IObserver {
   constructor(private userRepo: UserRepository) {}
 
-  update(event: ValidationEvent): void {
+  async update(event: ValidationEvent): Promise<void> {
     if (event.validationType === 'validate') {
-      this.userRepo.incrementTrustScore(event.reporterId);
+      await this.userRepo.incrementTrustScore(event.reporterId);
     }
   }
 }

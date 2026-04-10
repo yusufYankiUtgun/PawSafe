@@ -4,5 +4,5 @@ import { ValidationEvent } from './types';
 export interface ISubject {
   subscribe(observer: IObserver): void;
   unsubscribe(observer: IObserver): void;
-  notify(event: ValidationEvent): void;
+  notify(event: ValidationEvent): Promise<void>;
 }

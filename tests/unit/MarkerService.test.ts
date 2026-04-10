@@ -18,11 +18,11 @@ function makeRepos() {
 // ─── createMarker() ───────────────────────────────────────────────────────────
 
 describe('MarkerService – createMarker()', () => {
-  it('returns a marker with the supplied coordinates and reporter info', () => {
+  it('returns a marker with the supplied coordinates and reporter info', async () => {
     const { markerRepo, userRepo } = makeRepos();
     const svc = new MarkerService(markerRepo, userRepo);
 
-    const marker = svc.createMarker(
+    const marker = await svc.createMarker(
       41.01, 28.96, '', 'u1', 'mehmet_can', 'Test açıklaması', 2,
       'medium', 'siyah', 'yok', 'friendly', 'Test Sokak',
     );
@@ -40,124 +40,124 @@ describe('MarkerService – createMarker()', () => {
     expect(marker.address).toBe('Test Sokak');
   });
 
-  it('initialises validationCount and disputeCount at 0', () => {
+  it('initialises validationCount and disputeCount at 0', async () => {
     const { markerRepo, userRepo } = makeRepos();
     const svc = new MarkerService(markerRepo, userRepo);
 
-    const marker = svc.createMarker(41.0, 29.0, '', 'u1', 'mehmet_can', '', 1);
+    const marker = await svc.createMarker(41.0, 29.0, '', 'u1', 'mehmet_can', '', 1);
 
     expect(marker.validationCount).toBe(0);
     expect(marker.disputeCount).toBe(0);
   });
 
-  it('defaults animalCount to 1 when 0 is supplied', () => {
+  it('defaults animalCount to 1 when 0 is supplied', async () => {
     const { markerRepo, userRepo } = makeRepos();
     const svc = new MarkerService(markerRepo, userRepo);
 
-    const marker = svc.createMarker(41.0, 29.0, '', 'u1', 'mehmet_can', '', 0);
+    const marker = await svc.createMarker(41.0, 29.0, '', 'u1', 'mehmet_can', '', 0);
 
     expect(marker.animalCount).toBe(1);
   });
 
-  it('awards POINTS_PER_MARKER (10) trust points to the reporter', () => {
+  it('awards POINTS_PER_MARKER (10) trust points to the reporter', async () => {
     const { markerRepo, userRepo } = makeRepos();
     const svc = new MarkerService(markerRepo, userRepo);
-    const scoreBefore = userRepo.getById('u1')!.trustScore;
+    const scoreBefore = (await userRepo.getById('u1'))!.trustScore;
 
-    svc.createMarker(41.0, 29.0, '', 'u1', 'mehmet_can', '', 1);
+    await svc.createMarker(41.0, 29.0, '', 'u1', 'mehmet_can', '', 1);
 
-    expect(userRepo.getById('u1')!.trustScore).toBe(scoreBefore + 10);
+    expect((await userRepo.getById('u1'))!.trustScore).toBe(scoreBefore + 10);
   });
 
-  it('works correctly when no UserRepository is provided (no trust award)', () => {
+  it('works correctly when no UserRepository is provided (no trust award)', async () => {
     const { markerRepo } = makeRepos();
     const svc = new MarkerService(markerRepo);
 
-    const marker = svc.createMarker(41.0, 29.0, '', 'u1', 'mehmet_can', '', 1);
+    const marker = await svc.createMarker(41.0, 29.0, '', 'u1', 'mehmet_can', '', 1);
 
     expect(marker).toBeDefined();
     expect(marker.id).toBeTruthy();
   });
 
-  it('persists the new marker so getAll() includes it', () => {
+  it('persists the new marker so getAll() includes it', async () => {
     const { markerRepo, userRepo } = makeRepos();
     const svc = new MarkerService(markerRepo, userRepo);
-    const countBefore = svc.getAll().length;
+    const countBefore = (await svc.getAll()).length;
 
-    svc.createMarker(41.0, 29.0, '', 'u2', 'ayse_kaya', '', 1);
+    await svc.createMarker(41.0, 29.0, '', 'u2', 'ayse_kaya', '', 1);
 
-    expect(svc.getAll().length).toBe(countBefore + 1);
+    expect((await svc.getAll()).length).toBe(countBefore + 1);
   });
 });
 
 // ─── getAll() / getById() ─────────────────────────────────────────────────────
 
 describe('MarkerService – getAll() / getById()', () => {
-  it('getAll() returns the seeded mock markers', () => {
+  it('getAll() returns the seeded mock markers', async () => {
     const { markerRepo } = makeRepos();
     const svc = new MarkerService(markerRepo);
 
-    expect(svc.getAll().length).toBeGreaterThan(0);
+    expect((await svc.getAll()).length).toBeGreaterThan(0);
   });
 
-  it('getById() returns the correct marker', () => {
+  it('getById() returns the correct marker', async () => {
     const { markerRepo } = makeRepos();
     const svc = new MarkerService(markerRepo);
 
-    const marker = svc.getById('m1');
+    const marker = await svc.getById('m1');
     expect(marker).toBeDefined();
     expect(marker!.id).toBe('m1');
   });
 
-  it('getById() returns undefined for an unknown id', () => {
+  it('getById() returns undefined for an unknown id', async () => {
     const { markerRepo } = makeRepos();
     const svc = new MarkerService(markerRepo);
 
-    expect(svc.getById('yok')).toBeUndefined();
+    expect(await svc.getById('yok')).toBeUndefined();
   });
 });
 
 // ─── update() ─────────────────────────────────────────────────────────────────
 
 describe('MarkerService – update()', () => {
-  it('merges supplied fields into the existing marker', () => {
+  it('merges supplied fields into the existing marker', async () => {
     const { markerRepo } = makeRepos();
     const svc = new MarkerService(markerRepo);
 
-    const updated = svc.update('m1', { description: 'Yeni açıklama', animalCount: 5 });
+    const updated = await svc.update('m1', { description: 'Yeni açıklama', animalCount: 5 });
 
     expect(updated).toBeDefined();
     expect(updated!.description).toBe('Yeni açıklama');
     expect(updated!.animalCount).toBe(5);
   });
 
-  it('returns undefined when the marker does not exist', () => {
+  it('returns undefined when the marker does not exist', async () => {
     const { markerRepo } = makeRepos();
     const svc = new MarkerService(markerRepo);
 
-    expect(svc.update('olmayan', { description: 'X' })).toBeUndefined();
+    expect(await svc.update('olmayan', { description: 'X' })).toBeUndefined();
   });
 });
 
 // ─── delete() ─────────────────────────────────────────────────────────────────
 
 describe('MarkerService – delete()', () => {
-  it('removes the marker and returns true', () => {
+  it('removes the marker and returns true', async () => {
     const { markerRepo } = makeRepos();
     const svc = new MarkerService(markerRepo);
-    const countBefore = svc.getAll().length;
+    const countBefore = (await svc.getAll()).length;
 
-    const result = svc.delete('m1');
+    const result = await svc.delete('m1');
 
     expect(result).toBe(true);
-    expect(svc.getAll().length).toBe(countBefore - 1);
-    expect(svc.getById('m1')).toBeUndefined();
+    expect((await svc.getAll()).length).toBe(countBefore - 1);
+    expect(await svc.getById('m1')).toBeUndefined();
   });
 
-  it('returns false for a non-existent marker', () => {
+  it('returns false for a non-existent marker', async () => {
     const { markerRepo } = makeRepos();
     const svc = new MarkerService(markerRepo);
 
-    expect(svc.delete('olmayan')).toBe(false);
+    expect(await svc.delete('olmayan')).toBe(false);
   });
 });

@@ -15,21 +15,21 @@ export function createValidationsRouter(
 ): Router {
   const router = Router();
 
-  router.post('/:markerId/validate', (req: Request, res: Response) => {
+  router.post('/:markerId/validate', async (req: Request, res: Response) => {
     const token = req.headers.authorization?.replace('Bearer ', '');
     if (!token) return res.status(401).json({ error: 'Yetkilendirme gerekli.' });
-    const user = authService.getUserFromToken(token);
+    const user = await authService.getUserFromToken(token);
     if (!user) return res.status(401).json({ error: 'Geçersiz token.' });
 
-    const result = validationService.validate(req.params.markerId, user.id);
+    const result = await validationService.validate(req.params.markerId, user.id);
     if (!result.success) return res.status(400).json({ error: result.message });
     res.json({ success: true, message: result.message });
   });
 
-  router.post('/:markerId/dispute', (req: Request, res: Response) => {
+  router.post('/:markerId/dispute', async (req: Request, res: Response) => {
     const token = req.headers.authorization?.replace('Bearer ', '');
     if (!token) return res.status(401).json({ error: 'Yetkilendirme gerekli.' });
-    const user = authService.getUserFromToken(token);
+    const user = await authService.getUserFromToken(token);
     if (!user) return res.status(401).json({ error: 'Geçersiz token.' });
 
     const { reason, explanation } = req.body;
@@ -41,7 +41,7 @@ export function createValidationsRouter(
       });
     }
 
-    const result = validationService.dispute(
+    const result = await validationService.dispute(
       req.params.markerId,
       user.id,
       reason as DisputeReason,
@@ -52,9 +52,9 @@ export function createValidationsRouter(
     res.json({ success: true, message: result.message });
   });
 
-  router.get('/leaderboard', (_req: Request, res: Response) => {
+  router.get('/leaderboard', async (_req: Request, res: Response) => {
     res.json({
-      data: leaderboardObserver.rerank(),
+      data:       await leaderboardObserver.rerank(),
       lastUpdate: leaderboardObserver.getLastUpdate(),
     });
   });

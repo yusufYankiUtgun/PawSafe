@@ -15,7 +15,7 @@ const DISPUTE_REASON_LABELS: Record<DisputeReason, string> = {
 export class NotificationObserver implements IObserver {
   private notifications: Notification[] = [...mockNotifications];
 
-  update(event: ValidationEvent): void {
+  async update(event: ValidationEvent): Promise<void> {
     let message: string;
 
     if (event.validationType === 'validate') {

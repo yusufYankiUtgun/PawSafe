@@ -20,25 +20,25 @@ export class ValidationService implements ISubject {
     this.observers = this.observers.filter(o => o !== observer);
   }
 
-  notify(event: ValidationEvent): void {
-    this.observers.forEach(o => o.update(event));
+  async notify(event: ValidationEvent): Promise<void> {
+    await Promise.all(this.observers.map(o => o.update(event)));
   }
 
-  validate(markerId: string, userId: string): { success: boolean; message: string } {
-    if (this.validationRepo.hasVoted(markerId, userId)) {
+  async validate(markerId: string, userId: string): Promise<{ success: boolean; message: string }> {
+    if (await this.validationRepo.hasVoted(markerId, userId)) {
       return { success: false, message: 'Zaten oy kullandınız.' };
     }
 
-    const marker = this.markerRepo.getById(markerId);
+    const marker = await this.markerRepo.getById(markerId);
     if (!marker) return { success: false, message: 'Marker bulunamadı.' };
 
-    this.validationRepo.save({ markerId, userId, type: 'validate' });
-    this.markerRepo.incrementValidation(markerId);
+    await this.validationRepo.save({ markerId, userId, type: 'validate' });
+    await this.markerRepo.incrementValidation(markerId);
 
-    this.notify({
+    await this.notify({
       markerId,
-      reporterId: marker.reporterId,
-      validatorId: userId,
+      reporterId:     marker.reporterId,
+      validatorId:    userId,
       validationType: 'validate',
     });
 
@@ -53,26 +53,26 @@ export class ValidationService implements ISubject {
    * @param reason       – mandatory dispute reason category
    * @param explanation  – optional free-text explanation
    */
-  dispute(
+  async dispute(
     markerId: string,
     userId: string,
     reason: DisputeReason,
     explanation?: string,
-  ): { success: boolean; message: string } {
-    if (this.validationRepo.hasVoted(markerId, userId)) {
+  ): Promise<{ success: boolean; message: string }> {
+    if (await this.validationRepo.hasVoted(markerId, userId)) {
       return { success: false, message: 'Zaten oy kullandınız.' };
     }
 
-    const marker = this.markerRepo.getById(markerId);
+    const marker = await this.markerRepo.getById(markerId);
     if (!marker) return { success: false, message: 'Marker bulunamadı.' };
 
-    this.validationRepo.save({ markerId, userId, type: 'dispute', reason, explanation });
-    this.markerRepo.incrementDispute(markerId);
+    await this.validationRepo.save({ markerId, userId, type: 'dispute', reason, explanation });
+    await this.markerRepo.incrementDispute(markerId);
 
-    this.notify({
+    await this.notify({
       markerId,
-      reporterId: marker.reporterId,
-      validatorId: userId,
+      reporterId:     marker.reporterId,
+      validatorId:    userId,
       validationType: 'dispute',
       reason,
       explanation,

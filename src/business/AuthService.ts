@@ -4,12 +4,12 @@ import { UserRepository } from '../data/UserRepository';
 export class AuthService {
   constructor(private userRepo: UserRepository) {}
 
-  register(
+  async register(
     email: string,
     username: string,
     password: string
-  ): { user: Omit<User, 'password'>; token: string } | null {
-    const existing = this.userRepo.getByEmail(email);
+  ): Promise<{ user: Omit<User, 'password'>; token: string } | null> {
+    const existing = await this.userRepo.getByEmail(email);
     if (existing) return null;
 
     const newUser: User = {
@@ -21,17 +21,17 @@ export class AuthService {
       role: 'user',
     };
 
-    this.userRepo.save(newUser);
+    await this.userRepo.save(newUser);
     const token = `mock-token-${newUser.id}`;
     const { password: _, ...safeUser } = newUser;
     return { user: safeUser, token };
   }
 
-  login(
+  async login(
     email: string,
     password: string
-  ): { user: Omit<User, 'password'>; token: string } | null {
-    const user = this.userRepo.getByEmail(email);
+  ): Promise<{ user: Omit<User, 'password'>; token: string } | null> {
+    const user = await this.userRepo.getByEmail(email);
     if (!user || user.password !== password) return null;
 
     const token = `mock-token-${user.id}`;
@@ -39,9 +39,9 @@ export class AuthService {
     return { user: safeUser, token };
   }
 
-  getUserFromToken(token: string): User | null {
+  async getUserFromToken(token: string): Promise<User | null> {
     if (!token || !token.startsWith('mock-token-')) return null;
     const userId = token.replace('mock-token-', '');
-    return this.userRepo.getById(userId) || null;
+    return (await this.userRepo.getById(userId)) || null;
   }
 }
